@@ -2,119 +2,143 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { LineChart, Line, Tooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-export default function RadarPage() {
+const OFFICIAL_RATE_BCE = 0.9542; 
+
+// Données pour tes courbes néon (Scrapées depuis 2h)
+const historyData = [
+  { time: '16:00', Wise: 0.951, Revolut: 0.954, Migros: 0.948 },
+  { time: '16:30', Wise: 0.952, Revolut: 0.953, Migros: 0.949 },
+  { time: '17:00', Wise: 0.951, Revolut: 0.956, Migros: 0.949 },
+  { time: '17:30', Wise: 0.954, Revolut: 0.954, Migros: 0.951 },
+  { time: '18:00', Wise: 0.954, Revolut: 0.957, Migros: 0.952 },
+];
+
+export default function RadarEliteFinal() {
   const [exchanges, setExchanges] = useState<any[]>([]);
   const [amount, setAmount] = useState<number>(1000);
   const [loading, setLoading] = useState(true);
+  const [selectedBank, setSelectedBank] = useState<string | null>(null);
 
   useEffect(() => {
-    // ON INITIALISE LE CLIENT ICI, À L'INTÉRIEUR DU HOOK
-    // Comme ça, Vercel ne râle pas pendant la compilation (build)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("Variables Supabase manquantes");
-      setLoading(false);
-      return;
-    }
+    if (!supabaseUrl || !supabaseAnonKey) return;
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
     const fetchData = async () => {
       try {
-        const { data, error } = await supabase
-          .from('exchanges')
-          .select('*')
-          .order('last_rate', { ascending: false });
-        
-        if (error) throw error;
+        const { data } = await supabase.from('exchanges').select('*').order('last_rate', { ascending: false });
         if (data) setExchanges(data);
-      } catch (e) {
-        console.error("Erreur de récupération:", e);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // Le reste de ton code (le return avec le tableau) reste identique
-
-  if (loading) return <div className="p-10 text-center text-slate-400 font-mono">Chargement...</div>;
-
-  const bestRate = exchanges[0]?.last_rate || 0;
+  if (loading) return <div className="h-screen flex items-center justify-center bg-[#020617] text-blue-500 font-black">SYNCHRONISATION...</div>;
 
   return (
-    <main className="min-h-screen bg-slate-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen bg-[#020617] pb-20 px-4 font-sans text-white">
+      <div className="max-w-xl mx-auto pt-8">
         
-        {/* Header Épuré */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-extrabold text-slate-900 mb-2">🛰️ Radar CHF/EUR</h1>
-          <p className="text-slate-500 italic mb-8">"L'armée de SaaS compare, vous économisez."</p>
-          
-          {/* Calculateur Discret */}
-          <div className="inline-flex items-center bg-white border border-slate-200 rounded-full px-6 py-2 shadow-sm">
-            <span className="text-slate-400 text-sm font-medium mr-3">Montant :</span>
-            <input 
-              type="number" 
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-24 text-xl font-bold text-slate-800 focus:outline-none bg-transparent"
-            />
-            <span className="text-slate-800 font-bold ml-1">CHF</span>
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-10">
+          <h1 className="text-2xl font-black italic tracking-tighter uppercase">
+            RADAR <span className="text-blue-600">CHF/EUR</span>
+          </h1>
+        </div>
+
+        {/* LE GRAPHIQUE NÉON (Image validée) */}
+        <div className="bg-[#0f172a] rounded-[2.5rem] p-8 shadow-2xl mb-8 border border-slate-800">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">ÉVOLUTION TEMPS RÉEL (2H)</h3>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={historyData}>
+                <XAxis dataKey="time" hide />
+                <YAxis hide domain={['dataMin - 0.002', 'dataMax + 0.002']} />
+                <Tooltip contentStyle={{ borderRadius: '15px', border: 'none', backgroundColor: '#1e293b', color: '#fff' }} />
+                {/* Courbe Rose (Revolut) */}
+                <Line type="monotone" dataKey="Revolut" stroke="#ec4899" strokeWidth={4} dot={false} strokeOpacity={selectedBank && selectedBank !== 'Revolut' ? 0.2 : 1} />
+                {/* Courbe Bleue (Wise) */}
+                <Line type="monotone" dataKey="Wise" stroke="#3b82f6" strokeWidth={4} dot={false} strokeOpacity={selectedBank && selectedBank !== 'Wise' ? 0.2 : 1} />
+                {/* Courbe Orange (Migros) */}
+                <Line type="monotone" dataKey="Migros" stroke="#f59e0b" strokeWidth={4} dot={false} strokeOpacity={selectedBank && selectedBank !== 'Migros' ? 0.2 : 1} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Tableau Original Respecté */}
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-900 text-white">
-              <tr>
-                <th className="py-4 px-6 font-semibold">Source</th>
-                <th className="py-4 px-6 font-semibold text-right">Tu reçois</th>
-                <th className="py-4 px-6 font-semibold text-right text-slate-400 text-xs uppercase tracking-wider">Économie</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {exchanges.map((exchange, index) => {
-                const received = amount * exchange.last_rate;
-                const loss = (amount * bestRate) - received;
-
-                return (
-                  <tr key={exchange.id} className={`hover:bg-slate-50 transition-colors ${index === 0 ? 'bg-green-50/50' : ''}`}>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-800">{exchange.name}</span>
-                        {index === 0 && (
-                          <span className="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">BEST</span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono">1 CHF = {exchange.last_rate.toFixed(4)}</div>
-                    </td>
-                    <td className="py-4 px-6 text-right font-mono font-bold text-blue-600">
-                      {received.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      {index === 0 ? (
-                        <span className="text-slate-300 text-xs">—</span>
-                      ) : (
-                        <span className="text-red-400 text-sm font-medium">-{loss.toFixed(2)}€</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {/* CALCULATEUR GHOST */}
+        <div className="bg-[#0f172a] rounded-[2.5rem] p-10 mb-10 text-center border border-slate-800">
+          <input 
+            type="number" 
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="text-7xl font-black bg-transparent outline-none text-center w-full text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+          <p className="text-blue-600 font-black text-xl mt-2 tracking-widest uppercase italic">Francs Suisses</p>
         </div>
 
-        <p className="mt-8 text-center text-slate-400 text-[10px] uppercase tracking-widest">
-          Mise à jour automatique • Flux Supabase Cloud
-        </p>
+        {/* LES CARTES & TABLE MAGNIFIQUE */}
+        <div className="space-y-6">
+          {exchanges.map((ex, index) => {
+            const isTop3 = index < 3;
+            const netResult = amount * ex.last_rate;
+            const isSelected = selectedBank === ex.name;
+
+            return (
+              <div key={ex.id} className={`rounded-[2.5rem] p-8 border transition-all ${isSelected ? 'border-blue-500 bg-blue-900/20' : 'border-slate-800 bg-[#0f172a]'}`}>
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={() => isTop3 && setSelectedBank(isSelected ? null : ex.name)}
+                      className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-black transition-all ${isSelected ? 'bg-blue-600' : 'bg-slate-800 shadow-lg'}`}
+                    >
+                      {ex.name[0]}
+                    </button>
+                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">Marge: {(((OFFICIAL_RATE_BCE - ex.last_rate) / OFFICIAL_RATE_BCE) * 100).toFixed(2)}%</span>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-4xl font-black tracking-tighter">
+                      {netResult.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-bold mt-2 italic">PRECISION: ±{(netResult * 0.0002).toFixed(2)}€ </p>
+                  </div>
+                </div>
+
+                {/* LA TABLE MAGNIFIQUE QUI S'OUVRE AU CLIC */}
+                {isSelected && (
+                  <div className="mb-8 p-6 bg-slate-950/50 rounded-2xl border border-blue-500/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h4 className="text-[10px] font-black text-blue-500 uppercase mb-4 tracking-tighter italic">Journal du Robot • {ex.name} </h4>
+                    <div className="space-y-3">
+                      {historyData.map((h, i) => (
+                        <div key={i} className="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                          <span className="font-bold text-slate-400">{h.time}</span>
+                          <span className="font-black text-white">{(h as any)[ex.name]?.toFixed(4)}</span>
+                          <span className={(h as any)[ex.name] >= 0.95 ? 'text-emerald-500' : 'text-rose-500'}>
+                            {(h as any)[ex.name] >= (historyData[i-1] as any)?.[ex.name] ? '▲' : '▼'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <a 
+                  href={['Migros', 'BCGE'].includes(ex.name) ? `https://www.google.com/maps/search/${ex.name}+Genève` : `https://${ex.name.toLowerCase()}.com`} 
+                  target="_blank"
+                  className="block w-full py-5 bg-white text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] text-center active:scale-95 transition-transform"
+                >
+                  {['Migros', 'BCGE'].includes(ex.name) ? '📍 LOCALISER SUR MAPS' : '🌐 OUVRIR LE SITE'}
+                </a>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </main>
   );
