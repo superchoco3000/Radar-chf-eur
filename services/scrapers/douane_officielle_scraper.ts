@@ -2,21 +2,19 @@ import { chromium } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { createClient } from '@supabase/supabase-js';
 
-// On demande d'abord au système (GitHub), sinon on prend la valeur locale
+// Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://iykyjwcgizoehzzcenlt.supabase.co'; 
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_secret_rATrmo041XODJGtBFIMxRQ_cn2frNdH';
-chromium.use(stealth());
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const DOUANE_DB_ID = '9d22701b-63fa-4aca-9338-fb25ca136388';
 
+chromium.use(stealth());
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 async function scrapeDouane() {
-  console.log("🕵️ Lancement du robot furtif...");
+  console.log("🕵️ Lancement du robot Douane (Furtif)...");
   
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 }
-  });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await context.newPage();
 
   try {
@@ -25,19 +23,17 @@ async function scrapeDouane() {
       timeout: 60000 
     });
 
-    // 1. Cliquer sur "Today" (Aujourd'hui) pour charger le tableau
-    console.log("🖱️ Clic sur le bouton 'Today'...");
-    const todayButton = page.locator('button').filter({ hasText: /Today|Aujourd'hui/ });
+    // 1. Cliquer sur "Today"
+    const todayButton = page.locator('button:has-text("Today")');
     await todayButton.waitFor({ state: 'visible' });
     await todayButton.click();
 
-    // 2. Attendre que le tableau apparaisse (ID identifié sur ton F12)
+    // 2. Attendre le tableau
     const tableSelector = '#pr_id_1-table';
     console.log("⏳ Attente du rendu du tableau...");
     await page.waitForSelector(`${tableSelector} tbody tr`, { timeout: 20000 });
 
     // 3. Chercher la ligne EUR
-    console.log("🔍 Recherche du taux EUR...");
     const row = page.locator(`${tableSelector} tr`).filter({ hasText: 'EUR' });
     await row.waitFor({ state: 'visible' });
 
@@ -46,12 +42,15 @@ async function scrapeDouane() {
 
     if (rawRateText) {
       const rateOnPage = parseFloat(rawRateText.trim().replace(',', '.'));
+      
+      // ✅ CORRECTION : On utilise le vrai taux scrapé (ex: 0.93) pour le calcul
+      // Formule Radar : 1 / Taux
       const finalRate = parseFloat((1 / rateOnPage).toFixed(4));
 
-      console.log(`📊 Brut : 1 EUR = ${rateOnPage} CHF | Radar : ${finalRate} EUR`);
+      console.log(`📊 Brut Douane : 1 EUR = ${rateOnPage} CHF | ✅ Radar : ${finalRate}`);
 
-      // 5. Mise à jour Supabase
-      const { error } = await supabase
+      // ✅ 5. UPDATE : Mise à jour de la carte
+      const { error: updateErr } = await supabase
         .from('exchanges')
         .update({ 
           last_rate: finalRate, 
@@ -59,15 +58,26 @@ async function scrapeDouane() {
         })
         .eq('id', DOUANE_DB_ID);
 
-      if (!error) console.log("✅ Supabase mis à jour !");
-      else console.error("❌ Erreur Supabase :", error.message);
+      if (updateErr) console.error("❌ Erreur Update :", updateErr.message);
+
+      // ✅ 6. INSERT : Pour le graphique (Historique)
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: DOUANE_DB_ID, 
+          rate_chf_eur: finalRate,
+          captured_at: new Date().toISOString()
+        });
+
+      if (!histError) console.log("✅ Douane synchronisée (Carte + Graphique) !");
+      else console.error("❌ Erreur historique :", histError.message);
     }
 
   } catch (err: any) {
-    console.error("💥 ÉCHEC :", err.message);
-    await page.screenshot({ path: 'debug_click_error.png' });
+    console.error("💥 Erreur Douane :", err.message);
   } finally {
     await browser.close();
+    console.log("🔒 Robot Douane déconnecté.");
   }
 }
 

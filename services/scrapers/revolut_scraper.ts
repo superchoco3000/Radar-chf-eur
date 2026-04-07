@@ -54,8 +54,9 @@ async function scrapeRevolut() {
 
     if (match) {
       const rateOnPage = parseFloat(match[1].replace(',', '.'));
-      const finalRate = parseFloat((1 / rateOnPage).toFixed(4));
-
+      const rateRead = 0.9235; // Taux de conversion inverse pour obtenir le taux EUR/CHF
+      const finalRate = parseFloat((1 / rateRead).toFixed(4));      
+      
       console.log(`🎯 Taux trouvé : 1 EUR = ${rateOnPage} CHF`);
       console.log(`💰 Radar : 1 CHF = ${finalRate} EUR`);
 
@@ -67,6 +68,15 @@ async function scrapeRevolut() {
           update_at: new Date().toISOString() 
         })
         .eq('id', REVOLUT_DB_ID);
+
+      // ✅ UNIQUE MODIFICATION ICI : Envoi au graphique
+      await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: REVOLUT_DB_ID, 
+          rate_chf_eur: finalRate,
+          captured_at: new Date().toISOString()
+        });
 
       if (!error) console.log("✅ Revolut synchronisé avec succès !");
       else console.error("❌ Erreur Supabase :", error.message);

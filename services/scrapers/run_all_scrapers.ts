@@ -11,7 +11,13 @@ const scrapers = [
   'bsharpe_scraper.ts',
   'changesavoisien_scraper.ts',
   'ibani_scraper.ts',
-  'telexoo_scraper.ts'
+  'telexoo_scraper.ts',
+  'leman_montblanc_scraper.ts',
+  'migros_scraper.ts',
+  'moneyand_scraper.ts',
+  'change_geneve_scraper.ts',
+  'douane_officielle_scraper.ts',
+
   // Ajoute ici tous les fichiers présents dans ton dossier scrapers
 ];
 

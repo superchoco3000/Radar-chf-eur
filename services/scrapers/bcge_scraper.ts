@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 // Configuration hybride
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://iykyjwcgizoehzzcenlt.supabase.co'; 
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_secret_rATrmo041XODJGtBFIMxRQ_cn2frNdH';
-const BCGE_DB_ID = '5f172975-f3de-4b76-b549-2e01909eadf3'; // N'oublie pas de créer la ligne dans Supabase !
+const BCGE_DB_ID = '69e0bc4f-d819-4f9d-8922-046db5f09e41'; // N'oublie pas de créer la ligne dans Supabase !
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -31,18 +31,30 @@ async function scrapeBCGE() {
     const rateRaw = await cells.nth(4).innerText(); 
     
     const rateOnPage = parseFloat(rateRaw.replace(',', '.').trim());
-    const finalRate = parseFloat((1 / rateOnPage).toFixed(4));
 
-    if (!isNaN(finalRate)) {
+    if (!isNaN(rateOnPage) && rateOnPage !== 0) {      
+      const finalRate = parseFloat((1 / rateOnPage).toFixed(4));      
       console.log(`📊 Brut BCGE : 1 EUR = ${rateOnPage} CHF | Radar : ${finalRate} EUR`);
 
-      const { error } = await supabase
-        .from('exchanges')
-        .update({ last_rate: finalRate, update_at: new Date().toISOString() })
-        .eq('id', BCGE_DB_ID);
+      const { error } = 
+        // ✅ 1. UPDATE : Pour la carte (Current State)
+        await supabase
+          .from('exchanges')
+          .update({ last_rate: finalRate })
+          .eq('id', BCGE_DB_ID); // Remplace par l'ID du robot (ex: Wise_ID)
 
-      if (!error) console.log("✅ BCGE mis à jour !");
-    }
+        // ✅ 2. INSERT : Pour le graphique (History)
+        const { error: histError } = await supabase
+          .from('exchange_rates')
+          .insert({ 
+            exchange_id: BCGE_DB_ID, // Remplace par l'ID du robot
+            rate_chf_eur: finalRate,
+            captured_at: new Date().toISOString()
+          });
+
+        if (!histError) console.log("✅ Historique synchronisé !");
+        else console.error("❌ Erreur historique :", histError.message);
+      }
 
   } catch (err: any) {
     console.error("💥 Erreur BCGE :", err.message);

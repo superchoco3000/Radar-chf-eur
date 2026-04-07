@@ -20,33 +20,45 @@ async function scrapeIbaniVision() {
     await page.goto('https://www.ibani.com/fr/', { waitUntil: 'networkidle' });
     
     console.log("📸 Capture du widget de conversion...");
-    await page.waitForTimeout(3000); // On laisse bien le temps au widget de s'actualiser
+    await page.waitForTimeout(4000); 
     const screenshotPath = 'ibani_debug.png';
     await page.screenshot({ path: screenshotPath });
 
     console.log("🧠 Analyse OCR de la capture...");
     const { data: { text } } = await Tesseract.recognize(screenshotPath, 'eng');
     
-    // On cherche un format 0.XXXX (comme le 0.9214 de ta capture)
     const matches = text.match(/0\.\d{4}/g);
     
     if (!matches) throw new Error("Impossible de détecter le taux 0.XXXX sur l'image");
 
-    // Extraction directe : Ibani affiche déjà "1 CHF = X EUR"
-    const finalRate = parseFloat(matches[0]);
+    // ✅ CORRECTION : On utilise le taux détecté par l'OCR
+    const rateRead = parseFloat(matches[0]); 
+    const finalRate = parseFloat((1 / rateRead).toFixed(4));
 
-    console.log(`📊 Radar ibani : 1 CHF = ${finalRate} EUR (Lecture directe)`);
+    if (!isNaN(finalRate)) {
+      console.log(`📊 Radar ibani : 1 CHF = ${finalRate} EUR (basé sur ${rateRead})`);
 
-    // Mise à jour Supabase
-    const { error } = await supabase
-      .from('exchanges')
-      .update({ 
-        last_rate: finalRate, 
-        update_at: new Date().toISOString() 
-      })
-      .eq('id', IBANI_DB_ID);
+      // 1. UPDATE : Pour la carte
+      await supabase
+        .from('exchanges')
+        .update({ 
+          last_rate: finalRate, 
+          update_at: new Date().toISOString() 
+        })
+        .eq('id', IBANI_DB_ID);
 
-    if (!error) console.log("✅ ibani mis à jour avec succès !");
+      // ✅ 2. INSERT : Pour le graphique (Historique)
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: IBANI_DB_ID, 
+          rate_chf_eur: finalRate,
+          captured_at: new Date().toISOString()
+        });
+
+      if (!histError) console.log("✅ ibani synchronisé (Carte + Graphique) !");
+      else console.error("❌ Erreur historique :", histError.message);
+    }
 
   } catch (err: any) {
     console.error("💥 Erreur ibani :", err.message);

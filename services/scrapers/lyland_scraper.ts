@@ -36,17 +36,20 @@ async function scrapeLyland() {
     if (!isNaN(finalRate)) {
       console.log(`📊 Radar Lyland : 1 CHF = ${finalRate} EUR`);
 
-      // Mise à jour directe de la colonne last_rate
-      const { error } = await supabase
-        .from('exchanges')
-        .update({ 
+      // 1. UPDATE (Carte)
+      await supabase.from('exchanges').update({ 
           last_rate: finalRate, 
           update_at: new Date().toISOString() 
-        })
-        .eq('id', LYLAND_DB_ID);
+      }).eq('id', LYLAND_DB_ID);
 
-      if (!error) console.log("✅ Lyland mis à jour dans Supabase !");
-      else throw error;
+      // ✅ 2. INSERT (Graphique - MANQUANT dans ta version)
+      const { error: histError } = await supabase.from('exchange_rates').insert({ 
+          exchange_id: LYLAND_DB_ID, 
+          rate_chf_eur: finalRate,
+          captured_at: new Date().toISOString()
+      });
+
+      if (!histError) console.log("✅ Lyland synchronisé partout !");
     }
 
   } catch (err: any) {

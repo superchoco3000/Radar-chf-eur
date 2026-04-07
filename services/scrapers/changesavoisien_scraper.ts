@@ -46,19 +46,29 @@ async function scrapeSavoisienVision() {
     if (!isNaN(finalRate)) {
       console.log(`📊 Radar Vision Savoisien : 1 CHF = ${finalRate} EUR (basé sur ${rateOnPage})`);
 
-      const { error } = await supabase
+      // 1. UPDATE : Pour la carte (C'est bon)
+      await supabase
         .from('exchanges')
         .update({ 
           last_rate: finalRate, 
           update_at: new Date().toISOString() 
         })
         .eq('id', SAVOISIEN_DB_ID);
+        
+      // ✅ 2. INSERT : Pour le graphique (On le déplace ici, à l'intérieur du IF)
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: SAVOISIEN_DB_ID, 
+          rate_chf_eur: finalRate,
+          captured_at: new Date().toISOString()
+        });
 
-      if (!error) console.log("✅ Supabase mis à jour via Vision !");
-    }
+      if (!histError) console.log("✅ Historique synchronisé !");
+    } // <-- On ferme le IF ici
 
   } catch (err: any) {
-    console.error("💥 Erreur Vision Savoisien :", err.message);
+    console.error("💥 Erreur :", err.message);
   } finally {
     await browser.close();
   }

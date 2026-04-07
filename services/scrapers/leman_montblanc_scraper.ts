@@ -1,10 +1,10 @@
 import { chromium } from 'playwright';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuration (Identique à ton modèle BCGE)
+// Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://iykyjwcgizoehzzcenlt.supabase.co'; 
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_secret_rATrmo041XODJGtBFIMxRQ_cn2frNdH';
-const LEMAN_MB_ID = '937ce748-e56b-4242-afa8-f3da68149bf0'; // Ajoute l'ID correspondant à ce bureau
+const LEMAN_MB_ID = '937ce748-e56b-4242-afa8-f3da68149bf0'; 
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -14,43 +14,51 @@ async function scrapeLemanMB() {
   const page = await browser.newPage();
 
   try {
-    // 1. Navigation vers le site
-    await page.goto('https://changelemanmontblanc.fr/', { waitUntil: 'networkidle' });
+    // 1. Navigation
+    await page.goto('https://changelemanmontblanc.fr/', { waitUntil: 'networkidle', timeout: 60000 });
 
-    console.log("🔍 Analyse de la table des devises...");
+    console.log("🔍 Extraction du taux EUR/CHF...");
+    await page.waitForSelector('tbody#tabDevis tr', { timeout: 10000 });
 
-    // 2. Scroll vers la table pour s'assurer que les données sont chargées
-    await page.locator('#tableDevis').scrollIntoViewIfNeeded();
-
-    // 3. Extraction du taux EUR/CHF
-    // La capture montre que l'EUR est la première ligne, et le taux de vente est dans la 3ème cellule (index 2)
+    // Extraction de la première ligne (EUR) - Taux de vente dans la 3ème cellule (index 2)
     const rateRaw = await page.locator('tbody#tabDevis tr').first().locator('td').nth(2).innerText();
     
+    // On nettoie le texte (remplace virgule par point)
     const rateOnPage = parseFloat(rateRaw.replace(',', '.').trim());
     
-    // Inversion pour ton Radar (1 / taux) comme sur BCGE
+    // ✅ LOGIQUE RADAR : Inversion (1 / taux) pour avoir 1 CHF = X EUR
     const finalRate = parseFloat((1 / rateOnPage).toFixed(4));
 
-    if (!isNaN(finalRate)) {
-      console.log(`📊 Brut Léman MB : 1 EUR = ${rateOnPage} CHF | Radar : ${finalRate} EUR`);
+    if (!isNaN(finalRate) && finalRate !== 0) {
+      console.log(`📊 Brut Léman MB : 1 EUR = ${rateOnPage} CHF | ✅ Radar : ${finalRate} EUR`);
 
-      // 4. Mise à jour Supabase
-      const { error } = await supabase
+      // 1. UPDATE : Pour la carte (Prix actuel)
+      await supabase
         .from('exchanges')
         .update({ 
-          last_rate: finalRate, 
+          last_rate: finalRate,
           update_at: new Date().toISOString() 
         })
         .eq('id', LEMAN_MB_ID);
 
-      if (!error) console.log("✅ Léman Mont-Blanc mis à jour !");
-      else throw error;
+      // ✅ 2. INSERT : Pour le GRAPHIQUE (Historique)
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: LEMAN_MB_ID, 
+          rate_chf_eur: finalRate,
+          captured_at: new Date().toISOString()
+        });
+
+      if (!histError) console.log("✅ Léman Mont-Blanc synchronisé (Carte + Graphique) !");
+      else console.error("❌ Erreur historique :", histError.message);
     }
 
   } catch (err: any) {
     console.error("💥 Erreur Léman Mont-Blanc :", err.message);
   } finally {
     await browser.close();
+    console.log("🔒 Robot Léman MB déconnecté.");
   }
 }
 

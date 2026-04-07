@@ -42,12 +42,15 @@ async function scrapeTelexooVision() {
 
     // Si le taux est > 1.2, c'est probablement du EUR -> CHF (Inversion nécessaire)
     // S'il est proche de 1 (0.9xxx ou 1.0xxx), c'est du CHF -> EUR (Direct)
-    const finalRate = rateOnPage > 1.2 ? parseFloat((1 / rateOnPage).toFixed(4)) : rateOnPage;
+    
+    // ✅ DYNAMISME : On utilise la lecture OCR (rateOnPage) au lieu du 0.929 fixe
+    const rateRead = rateOnPage; 
+    const finalRate = parseFloat((1 / rateRead).toFixed(4));
 
-    console.log(`📊 Radar Telexoo : 1 CHF = ${finalRate} EUR`);
+    console.log(`📊 Radar Telexoo : 1 CHF = ${finalRate} EUR (lu: ${rateRead})`);
 
-    // 3. Mise à jour Supabase
-    const { error } = await supabase
+    // 3. Mise à jour Supabase (CARTE)
+    const { error: updateErr } = await supabase
       .from('exchanges')
       .update({ 
         last_rate: finalRate, 
@@ -55,7 +58,19 @@ async function scrapeTelexooVision() {
       })
       .eq('id', TELEXOO_DB_ID);
 
-    if (!error) console.log("✅ Telexoo mis à jour !");
+    if (updateErr) console.error("❌ Erreur Update :", updateErr.message);
+
+    // ✅ 4. INSERT (GRAPHIQUE) : Envoi de la donnée pour tracer la courbe
+    const { error: histError } = await supabase
+      .from('exchange_rates')
+      .insert({ 
+        exchange_id: TELEXOO_DB_ID, 
+        rate_chf_eur: finalRate,
+        captured_at: new Date().toISOString()
+      });
+
+    if (!histError) console.log("✅ Telexoo synchronisé (Carte + Graphique) !");
+    else console.error("❌ Erreur historique :", histError.message);
 
   } catch (err: any) {
     console.error("💥 Erreur Telexoo :", err.message);

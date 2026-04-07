@@ -53,16 +53,33 @@ async function scrapeMigros() {
         throw new Error("Le taux extrait n'est pas un nombre valide.");
     }
 
+    // ✅ LOGIQUE RADAR : 1 / Taux du site
     const finalRate = parseFloat((1 / rateOnPage).toFixed(4));
     console.log(`📊 Migros Bank : 1 EUR = ${rateOnPage} CHF | Radar : ${finalRate} EUR`);
 
-    // 4. Mise à jour Supabase
-    const { error } = await supabase
+    // 1. UPDATE : Pour la carte (Prix actuel)
+    const { error: updateErr } = await supabase
       .from('exchanges')
-      .update({ last_rate: finalRate, update_at: new Date().toISOString() })
+      .update({ 
+        last_rate: finalRate, 
+        update_at: new Date().toISOString() 
+      })
       .eq('id', MIGROS_DB_ID);
 
-    if (!error) console.log("✅ Migros Bank mise à jour !");
+    if (updateErr) console.error("❌ Erreur Update :", updateErr.message);
+
+    // ✅ 2. INSERT : Pour le GRAPHIQUE (Historique - MANQUANT dans ta version)
+    const { error: histError } = await supabase
+      .from('exchange_rates')
+      .insert({ 
+        exchange_id: MIGROS_DB_ID, 
+        rate_chf_eur: finalRate,
+        captured_at: new Date().toISOString()
+      });
+
+    if (!histError) console.log("✅ Migros Bank synchronisée (Carte + Graphique) !");
+    else console.error("❌ Erreur historique :", histError.message);
+    
 
   } catch (err: any) {
     console.error("💥 ÉCHEC Migros :", err.message);
