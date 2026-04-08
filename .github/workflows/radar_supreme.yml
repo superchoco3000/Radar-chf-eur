@@ -1,0 +1,26 @@
+name: Radar_Main_Update
+
+on:
+  schedule:
+    - cron: '0 7-19 * * *' # De 7h à 19h
+  workflow_dispatch: # Bouton manuel
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_KEY }}
+      
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm install
+      - run: npx playwright install chromium --with-deps
+      - name: Lancement de l'armée
+        run: npx tsx services/scrapers/run_all_scrapers.ts
