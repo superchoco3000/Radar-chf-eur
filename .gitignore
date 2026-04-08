@@ -4,4 +4,5 @@ node_modules/
 *.png
 *.odt
 *.tmp
+*.env.local
 desktop.ini

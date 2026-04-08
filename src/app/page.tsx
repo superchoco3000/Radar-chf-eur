@@ -57,23 +57,37 @@ export default function RadarEliteFinal() {
         }
       }
 
+      // ... (haut de fetchData identique)
       if (histRes.data) {
+        // 1. On regroupe par minute comme avant
         const grouped = histRes.data.reduce((acc: any, row: any) => {
           const time = new Date(row.captured_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
           if (!acc[time]) acc[time] = { time };
-          
           const bankName = row.exchanges?.name;
-          if (bankName) {
-            // On applique getDisplayRate ici pour que le graphique soit lié au bouton
-            acc[time][bankName] = getDisplayRate(row.rate_chf_eur);
-          }
-          
+          if (bankName) acc[time][bankName] = getDisplayRate(row.rate_chf_eur);
           return acc;
         }, {});
 
-        const finalData = Object.values(grouped).sort((a: any, b: any) => a.time.localeCompare(b.time));
+        // 2. TRES IMPORTANT : On transforme en tableau trié
+        let finalData = Object.values(grouped).sort((a: any, b: any) => a.time.localeCompare(b.time));
+
+        // 3. CONTINUITÉ : Si on a des données, on ajoute un point "Maintenant"
+        if (finalData.length > 0) {
+          // On dit à TypeScript que lastPoint est un objet avec des clés de texte
+          const lastPoint = finalData[finalData.length - 1] as any;
+          const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          
+          if (lastPoint.time !== nowTime) {
+            finalData.push({
+              ...lastPoint, // Maintenant TypeScript accepte le spread
+              time: nowTime
+            });
+          }
+        }
+
         setHistoryData(finalData);
       }
+
       setLastScan(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }, [getDisplayRate]);
