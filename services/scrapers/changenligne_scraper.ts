@@ -24,25 +24,19 @@ async function scrapeChangeEnLigne() {
     // 1. Double Nettoyage des Cookies
     console.log("🧹 Élimination des deux bannières de cookies...");
     
-    // On cible les boutons "Accepter" ou les IDs de bannières courantes
     const cookieSelectors = [
-        'button:has-text("Accepter")', 
-        '#ez-accept-all', 
-        '.cc-btn.cc-allow',
-        'button:has-text("Autoriser")'
+        'button:has-text("Accepter")',
+        '#axeptio_btn_acceptAll',
+        '.axeptio_btn_acceptAll'
     ];
 
     for (const selector of cookieSelectors) {
         try {
-            // On cherche tous les boutons correspondant au sélecteur
-            const buttons = page.locator(selector);
-            const count = await buttons.count();
-            for (let i = 0; i < count; i++) {
-                if (await buttons.nth(i).isVisible()) {
-                    await buttons.nth(i).click();
-                    console.log(`✅ Obstacle sauté : ${selector}`);
-                    await page.waitForTimeout(1000); // Pause pour laisser la bannière disparaître
-                }
+            const btn = page.locator(selector);
+            if (await btn.isVisible({ timeout: 2000 })) {
+                await btn.click();
+                console.log(`✅ Obstacle sauté : ${selector}`);
+                await page.waitForTimeout(1000); 
             }
         } catch (e) {}
     }
@@ -52,8 +46,7 @@ async function scrapeChangeEnLigne() {
     await page.waitForTimeout(2000); 
     await page.screenshot({ path: 'changenligne_victoire.png' });
 
-    // 3. Extraction du taux (On vise la valeur "Virement")
-    // Le site affiche souvent le taux EUR/CHF de manière très lisible
+    // 3. Extraction du taux
     const rateLocator = page.locator('.rate-value, .current-rate, .rate').first();
     const rateRaw = await rateLocator.innerText();
     
@@ -62,7 +55,8 @@ async function scrapeChangeEnLigne() {
     if (!isNaN(rateOnPage) && rateOnPage !== 0) {
       console.log(`✅ Taux capturé : 1 EUR = ${rateOnPage} CHF`);
 
-      const { error } = await supabase
+      // A. MISE À JOUR DE LA TABLE PRINCIPALE
+      const { error: updateError } = await supabase
         .from('exchanges')
         .update({ 
             last_rate: rateOnPage,
@@ -70,13 +64,27 @@ async function scrapeChangeEnLigne() {
         })
         .eq('id', CHANGENLIGNE_DB_ID);
 
-      if (error) throw error;
-      console.log("🎯 Donnée injectée dans le Radar !");
+      if (updateError) throw updateError;
+
+      // B. ✅ AJOUT POUR LE GRAPHIQUE (Historique)
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: CHANGENLIGNE_DB_ID,
+          rate_chf_eur: rateOnPage,
+          captured_at: new Date().toISOString()
+        });
+
+      if (histError) throw histError;
+
+      console.log("🎯 Donnée injectée dans le Radar avec historique !");
+    } else {
+      console.log("⚠️ Impossible d'extraire un taux valide.");
     }
 
   } catch (err: any) {
-    console.error("💥 Erreur Mission :", err.message);
-    await page.screenshot({ path: 'changenligne_fail.png' });
+    console.error("💥 Erreur ChangeEnLigne :", err.message);
+    await page.screenshot({ path: 'erreur_changenligne.png' });
   } finally {
     await browser.close();
     console.log("🏁 Mission terminée. Bye !");

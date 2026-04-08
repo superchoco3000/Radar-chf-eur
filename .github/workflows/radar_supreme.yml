@@ -2,8 +2,8 @@ name: Radar_Main_Update
 
 on:
   schedule:
-    - cron: '0 7-19 * * *' # De 7h à 19h
-  workflow_dispatch: # Bouton manuel
+    - cron: '0 7-19 * * *' # Tourne toutes les heures de 7h à 19h
+  workflow_dispatch: 
 
 jobs:
   scrape:
@@ -11,16 +11,26 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      # On garde les deux formats pour la compatibilité avec tes anciens scripts
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_KEY }}
       
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24' # On passe à la version recommandée par ton erreur
           cache: 'npm'
-      - run: npm install
-      - run: npx playwright install chromium --with-deps
-      - name: Lancement de l'armée
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright Browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run All Scrapers
+        # On lance le général qui contient ta liste de 18 scrapers
         run: npx tsx services/scrapers/run_all_scrapers.ts

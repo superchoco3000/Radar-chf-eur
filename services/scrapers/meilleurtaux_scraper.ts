@@ -51,6 +51,7 @@ async function scrapeMeilleurTaux() {
       console.table(results.slice(0, 8));
       console.log(`🎯 Meilleur taux retenu : ${bestRate}`);
 
+      // 1. Mise à jour de la table principale (Ce que tu as déjà)
       const { error } = await supabase
         .from('exchanges')
         .update({ 
@@ -60,6 +61,19 @@ async function scrapeMeilleurTaux() {
         .eq('id', MEILLEURTAUX_DB_ID);
 
       if (error) throw error;
+
+      // 2. 🚨 LE BLOC MANQUANT À AJOUTER POUR LE GRAPHIQUE 🚨
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: MEILLEURTAUX_DB_ID,
+          rate_chf_eur: bestRate, // La variable de ton taux
+          captured_at: new Date().toISOString()
+        });
+
+      if (histError) throw histError;
+      // -----------------------------------------------------
+
       console.log("🎯 Radar mis à jour avec succès via Playwright !");
     } else {
       console.log("⚠️ Toujours rien... Vérification visuelle requise.");

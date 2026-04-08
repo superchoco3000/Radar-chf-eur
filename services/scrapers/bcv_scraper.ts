@@ -6,10 +6,9 @@ dotenv.config({ path: '.env.local', override: true });
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!);
 
-// L'ID de ta ligne BCV dans Supabase (à vérifier dans ton dashboard)
+// ✅ TON ID POUR LA BCV
 const BCV_DB_ID = '4f78de59-44be-449f-adce-2a641851e4e8'; 
 
 async function scrapeBCV() {
@@ -26,37 +25,50 @@ async function scrapeBCV() {
 
     console.log("🔍 Recherche de la ligne EUR dans le tableau...");
 
-    // On cherche la ligne qui contient "EUR" et on attend qu'elle soit chargée
+    // On cherche la ligne qui contient "EUR"
     const eurRow = page.locator('tr').filter({ hasText: 'EUR' }).first();
     await eurRow.waitFor({ timeout: 15000 });
 
     // On récupère toutes les cellules de la ligne
     const cells = eurRow.locator('td');
     
-    // Pour la BCV, on va chercher le taux de vente devises (généralement la 3ème colonne)
+    // Extraction du taux (3ème colonne)
     const rateRaw = await cells.nth(2).innerText(); 
     const rateOnPage = parseFloat(rateRaw.replace(',', '.').trim());
 
     if (!isNaN(rateOnPage) && rateOnPage !== 0) {
       console.log(`✅ Taux capturé : ${rateOnPage}`);
 
-      // Mise à jour de la table 'exchanges'
+      // 1. Mise à jour de la table 'exchanges' (Le chiffre en direct)
       const { error: updateError } = await supabase
         .from('exchanges')
         .update({ 
             last_rate: rateOnPage,
             update_at: new Date().toISOString()
         })
-        .ilike('name', '%BCV%');
+        .eq('id', BCV_DB_ID); // Utilisation de l'ID pour plus de sécurité
 
       if (updateError) throw updateError;
-      console.log("🎯 Données BCV synchronisées !");
+
+      // 2. ✅ AJOUT POUR LE GRAPHIQUE (Historique)
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: BCV_DB_ID,
+          rate_chf_eur: rateOnPage,
+          captured_at: new Date().toISOString()
+        });
+
+      if (histError) throw histError;
+
+      console.log("🎯 Radar BCV mis à jour avec historique !");
     }
+
   } catch (err: any) {
-    console.error("💥 Échec de la capture BCV :", err.message);
+    console.error("💥 Erreur BCV :", err.message);
   } finally {
     await browser.close();
-    console.log("🏁 Robot BCV déconnecté.");
+    console.log("🏁 Fin de mission BCV.");
   }
 }
 

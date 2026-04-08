@@ -80,6 +80,7 @@ export default function RadarEliteFinal() {
       setLastScan(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }, [getDisplayRate]);
+  
 
   useEffect(() => { fetchData(); const i = setInterval(fetchData, 30000); return () => clearInterval(i); }, [fetchData]);
 

@@ -9,7 +9,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABAS
 const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // AJOUTE CECI :
-console.log("DEBUG - URL:", SUPABASE_URL);
 console.log("DEBUG - KEY Length:", SUPABASE_KEY?.length); 
 console.log("DEBUG - KEY Start:", SUPABASE_KEY?.substring(0, 5));
 

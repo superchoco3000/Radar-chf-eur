@@ -55,7 +55,8 @@ async function scrapeRaiffeisen() {
       const finalRate = parseFloat((1 / rateOnPage).toFixed(4));
       console.log(`✅ Taux extrait : 1 EUR = ${finalRate} CHF`);
 
-      const { error } = await supabase
+      // 1. MISE À JOUR DE LA TABLE PRINCIPALE (Le chiffre en direct)
+      const { error: updateError } = await supabase
         .from('exchanges')
         .update({ 
             last_rate: finalRate,
@@ -63,8 +64,20 @@ async function scrapeRaiffeisen() {
         })
         .eq('id', RAIFFEISEN_DB_ID);
 
-      if (error) throw error;
-      console.log("🎯 Radar Raiffeisen mis à jour !");
+      if (updateError) throw updateError;
+
+      // 2. ✅ AJOUT POUR LE GRAPHIQUE (Historique)
+      const { error: histError } = await supabase
+        .from('exchange_rates')
+        .insert({ 
+          exchange_id: RAIFFEISEN_DB_ID,
+          rate_chf_eur: finalRate,
+          captured_at: new Date().toISOString()
+        });
+
+      if (histError) throw histError;
+
+      console.log("🎯 Radar Raiffeisen mis à jour avec historique !");
     }
 
   } catch (err: any) {
