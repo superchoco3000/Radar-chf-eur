@@ -1,12 +1,32 @@
 import { chromium } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
 
-// Configuration
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://iykyjwcgizoehzzcenlt.supabase.co'; 
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_secret_rATrmo041XODJGtBFIMxRQ_cn2frNdH';
+// ... (tes imports)
+dotenv.config({ path: '.env.local',override: true }); 
+
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// AJOUTE CECI :
+console.log("DEBUG - URL:", SUPABASE_URL);
+console.log("DEBUG - KEY Length:", SUPABASE_KEY?.length); 
+console.log("DEBUG - KEY Start:", SUPABASE_KEY?.substring(0, 5));
+
+// Log de diagnostic pour vérifier que les clés sont bien chargées
+if (SUPABASE_KEY) {
+    console.log(`🔑 Clé détectée (début) : ${SUPABASE_KEY.substring(0, 10)}...`);
+} else {
+    console.log("⚠️ Aucune clé trouvée dans l'environnement local.");
+}
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  throw new Error("❌ Erreur : Clés Supabase introuvables ! Vérifiez votre fichier .env.local");
+}
+
+
 const DOUANE_DB_ID = '9d22701b-63fa-4aca-9338-fb25ca136388';
-
 chromium.use(stealth());
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 

@@ -1,11 +1,32 @@
 import { chromium } from 'playwright';
 import { createClient } from '@supabase/supabase-js';
 import Tesseract from 'tesseract.js'; // La bibliothèque pour lire l'image
+import * as dotenv from 'dotenv';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://iykyjwcgizoehzzcenlt.supabase.co'; 
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_secret_rATrmo041XODJGtBFIMxRQ_cn2frNdH';
+// ... (tes imports)
+dotenv.config({ path: '.env.local',override: true }); 
+
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// AJOUTE CECI :
+console.log("DEBUG - URL:", SUPABASE_URL);
+console.log("DEBUG - KEY Length:", SUPABASE_KEY?.length); 
+console.log("DEBUG - KEY Start:", SUPABASE_KEY?.substring(0, 5));
+
+// Log de diagnostic pour vérifier que les clés sont bien chargées
+if (SUPABASE_KEY) {
+    console.log(`🔑 Clé détectée (début) : ${SUPABASE_KEY.substring(0, 10)}...`);
+} else {
+    console.log("⚠️ Aucune clé trouvée dans l'environnement local.");
+}
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  throw new Error("❌ Erreur : Clés Supabase introuvables ! Vérifiez votre fichier .env.local");
+}
+
+
 const SAVOISIEN_DB_ID = '8c889eea-d480-4259-ab5f-7af0b3ddedb7'; 
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function scrapeSavoisienVision() {
