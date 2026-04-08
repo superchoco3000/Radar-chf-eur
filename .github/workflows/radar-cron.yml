@@ -2,14 +2,13 @@ name: Radar Army Update
 
 on:
   schedule:
-    # S'exécute toutes les heures
     - cron: '0 * * * *'
   workflow_dispatch: 
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    # ✅ On déclare les secrets ici pour qu'ils soient disponibles partout dans le job
+    # ✅ DÉCLARATION GLOBALE : Disponible pour toutes les étapes ci-dessous
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
