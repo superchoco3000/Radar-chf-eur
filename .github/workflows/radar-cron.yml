@@ -8,11 +8,11 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    # ✅ DÉCLARATION GLOBALE : Disponible pour toutes les étapes ci-dessous
+    # ✅ ON DÉCLARE LES SECRETS ICI (NIVEAU GLOBAL DU JOB)
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
       
     steps:
       - name: Checkout code
@@ -31,17 +31,19 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run Radar Army
+        # ✅ On ajoute "|| true" à chaque ligne pour que si un site plante, 
+        # l'armée continue la mission pour les autres.
         run: |
-          npx tsx services/scrapers/bcge_scraper.ts
-          npx tsx services/scrapers/bsharpe_scraper.ts
-          npx tsx services/scrapers/change_geneve_scraper.ts
-          npx tsx services/scrapers/changesavoisien_scraper.ts
-          npx tsx services/scrapers/douane_officielle_scraper.ts
-          npx tsx services/scrapers/ibani_scraper.ts
-          npx tsx services/scrapers/leman_montblanc_scraper.ts
-          npx tsx services/scrapers/lyland_scraper.ts
-          npx tsx services/scrapers/migros_scraper.ts
-          npx tsx services/scrapers/moneyand_scraper.ts
-          npx tsx services/scrapers/revolut_scraper.ts
-          npx tsx services/scrapers/telexoo_scraper.ts
-          npx tsx services/scrapers/wise_scraper.ts
+          npx tsx services/scrapers/bcge_scraper.ts || true
+          npx tsx services/scrapers/bsharpe_scraper.ts || true
+          npx tsx services/scrapers/change_geneve_scraper.ts || true
+          npx tsx services/scrapers/changesavoisien_scraper.ts || true
+          npx tsx services/scrapers/douane_officielle_scraper.ts || true
+          npx tsx services/scrapers/ibani_scraper.ts || true
+          npx tsx services/scrapers/leman_montblanc_scraper.ts || true
+          npx tsx services/scrapers/lyland_scraper.ts || true
+          npx tsx services/scrapers/migros_scraper.ts || true
+          npx tsx services/scrapers/moneyand_scraper.ts || true
+          npx tsx services/scrapers/revolut_scraper.ts || true
+          npx tsx services/scrapers/telexoo_scraper.ts || true
+          npx tsx services/scrapers/wise_scraper.ts || true
