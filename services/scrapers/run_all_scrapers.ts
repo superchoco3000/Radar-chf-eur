@@ -16,7 +16,7 @@ const scrapers = [
   'lyland_scraper.ts',
   'meilleurtaux_scraper.ts',
   'migros_scraper.ts',
-  'mon_taux_scraper.ts',
+  'mon_taux_scraper.ts', // Vérifie bien que ce fichier s'appelle exactement comme ça
   'moneyand_scraper.ts',
   'raiffeisen_scraper.ts',
   'revolut_scraper.ts',
@@ -30,14 +30,15 @@ async function runArmy() {
   for (const scraper of scrapers) {
     try {
       console.log(`📡 Déploiement de : ${scraper}...`);
+      // Utilisation du chemin relatif correct pour GitHub Actions
       const { stdout } = await execPromise(`npx tsx services/scrapers/${scraper}`);
       console.log(stdout);
-    } catch (error) {
-      console.error(`⚠️ Échec du soldat ${scraper}:`, error);
+    } catch (error: any) {
+      console.error(`❌ Échec du soldat ${scraper}:`, error.message);
+      // On ne stoppe pas la boucle pour qu'un seul robot en panne ne bloque pas les 17 autres
     }
   }
-  
-  console.log("✅ Opération terminée. Le Radar est à jour dans Supabase !");
+  console.log("🏁 Fin de la mission globale.");
 }
 
 runArmy();
