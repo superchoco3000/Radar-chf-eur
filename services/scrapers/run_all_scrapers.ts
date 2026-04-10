@@ -21,7 +21,10 @@ const scrapers = [
   'raiffeisen_scraper.ts',
   'revolut_scraper.ts',
   'telexoo_scraper.ts',
-  'wise_scraper.ts'
+  'wise_scraper.ts',
+  'global_exchange_scraper.ts',
+  'bens_shop_scraper.ts',
+  'changegroup_scraper.ts'
 ];
 
 async function runArmy() {
