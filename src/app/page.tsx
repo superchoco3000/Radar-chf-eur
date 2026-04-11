@@ -182,6 +182,16 @@ export default function RadarEliteFinal() {
         </div>
       </div>
 
+      {/* BANDEAU TRANSPARENCE GLOBAL */}
+      <div className="max-w-5xl mx-auto mb-6 px-2">
+        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex items-center gap-4">
+          <ShieldCheck className="text-emerald-500 shrink-0" size={20} />
+          <p className="text-[10px] md:text-[11px] font-medium text-slate-400 leading-relaxed italic">
+            <span className="text-emerald-500 font-black uppercase tracking-widest">Note de Transparence :</span> Les données affichées proviennent des flux publics officiels des établissements. Ce radar est un outil indépendant de comparaison algorithmique. Pour plus de détails sur nos sources et calculs, consultez notre <a href="/methodologie" className="text-white underline hover:text-emerald-400">Méthodologie complète</a>.
+          </p>
+        </div>
+      </div>
+
       {/* LISTE DES CARTES (Logique conservée, Système d'accordéon ajouté) */}
       <div className="max-w-5xl mx-auto space-y-6 px-2">
         <AnimatePresence>
@@ -196,6 +206,7 @@ export default function RadarEliteFinal() {
             const minutesAgo = ex.update_at ? Math.floor((new Date().getTime() - new Date(ex.update_at).getTime()) / 60000) : NaN;
             const travelCosts = ex.type === 'physical' ? TRAVEL_EXPENSE_TOTAL : 0;
             const realProfit = ((displayRate - refRate) * amount) - travelCosts - fees;
+            const isOutdated = !isNaN(minutesAgo) && minutesAgo > 30;
 
             const isExpanded = expandedId === ex.id;
             const tips = formatSpecialConditions(ex.special_conditions);
@@ -203,8 +214,10 @@ export default function RadarEliteFinal() {
             return (
               <motion.div 
                 key={ex.id} 
-                layout // Permet l'animation fluide des autres cartes au déploiement
-                className={`bg-[#0f172a] rounded-[2rem] border transition-all duration-300 ${isExpanded ? 'border-emerald-500 ring-4 ring-emerald-500/10 shadow-2xl' : index === 0 ? 'border-emerald-500/50 shadow-xl' : 'border-slate-800'} overflow-hidden`}
+                layout 
+                className={`bg-[#0f172a] rounded-[2rem] border transition-all duration-300 ${
+                  isExpanded ? 'border-emerald-500 ring-4 ring-emerald-500/10 shadow-2xl' : index === 0 ? 'border-emerald-500/50 shadow-xl' : 'border-slate-800'
+                } ${isOutdated ? 'opacity-100 grayscale-[0.2] border-red-300/20' : ''}`}
               >
                 
                 {/* Header Carte (Devient clickable pour l'accordéon) */}
@@ -225,9 +238,21 @@ export default function RadarEliteFinal() {
                           {ex.type}
                         </span>
                         <div className="flex items-center gap-1.5 ml-2">
-                          <div className={`w-1 h-1 rounded-full ${minutesAgo < 15 ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />
-                          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                            Robot Sync : {isNaN(minutesAgo) ? 'NAN' : minutesAgo}m ago
+                          {/* Le point devient rouge et pulse s'il est HS */}
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            isOutdated 
+                              ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse' 
+                              : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
+                          }`} />
+                          
+                          <span className={`text-[8px] font-bold uppercase tracking-widest ${
+                            isOutdated ? 'text-red-400' : 'text-slate-500'
+                          }`}>
+                            {isOutdated ? (
+                              <span className="flex items-center gap-1 text-[7px]">⚠️ ROBOT HORS-LIGNE</span>
+                            ) : (
+                              `Robot Sync : ${isNaN(minutesAgo) ? 'NAN' : minutesAgo}m ago`
+                            )}
                           </span>
                         </div>
                       </div>
@@ -260,6 +285,13 @@ export default function RadarEliteFinal() {
                       {ex.opening_hours || "Consultez les horaires officiels"}
                     </p>
                     <p className="text-[9px] text-amber-500 font-black italic uppercase tracking-tighter animate-pulse">Cliquez pour l'expertise infiltrée</p>
+                  </div>
+
+                  {/* Note de source individuelle */}
+                  <div className="col-span-full p-2 bg-slate-900/40 border-t border-slate-800/50 flex justify-center">
+                    <p className="text-[8px] font-bold text-slate-600 uppercase tracking-[0.2em]">
+                      Source : Tarifs publics constatés via scan digital sur le site officiel de {ex.name}
+                    </p>
                   </div>
 
                   <div className="p-6 flex flex-col justify-center items-center text-center bg-[#020617]/40">
