@@ -112,7 +112,7 @@ export default function RadarEliteFinal() {
             <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">
               RADAR<span className="text-emerald-500">.</span>IO
             </h1>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] italic">Scan : {lastScan}</p>
+            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic">Scan : {lastScan}</p>
           </div>
 
           <div className="bg-emerald-500/10 border border-emerald-500/20 px-6 py-4 rounded-2xl backdrop-blur-md w-full md:w-auto text-center md:text-left">
@@ -127,13 +127,13 @@ export default function RadarEliteFinal() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-slate-800 pb-6 gap-4">
             <div className="flex items-center gap-3">
               <TrendingUp className="text-emerald-500" size={18}/>
-              <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400">Volatilité Comparée</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-300">Volatilité Comparée</h2>
             </div>
             <div className="flex flex-wrap gap-4">
               {["#10b981", "#3b82f6", "#6366f1"].map((color, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></span>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{top3Names[i] || '...'}</span>
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{top3Names[i] || '...'}</span>
                 </div>
               ))}
             </div>
@@ -165,7 +165,7 @@ export default function RadarEliteFinal() {
                 className="bg-transparent text-4xl md:text-8xl font-black w-full outline-none placeholder-slate-800 italic text-center leading-none"
                 placeholder="0"
               />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">Somme à convertir</p>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-4">Somme à convertir</p>
             </div>
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <motion.button 
@@ -181,7 +181,7 @@ export default function RadarEliteFinal() {
               <div className="text-4xl md:text-8xl font-black italic text-white text-center leading-none truncate w-full">
                 {(amount * getDisplayRate(validatedExchanges[0]?.last_rate || officialRateRef)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">Estimation Réception Elite</p>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-4">Estimation Réception Elite</p>
             </div>
           </div>
         </div>
@@ -190,8 +190,8 @@ export default function RadarEliteFinal() {
       <div className="max-w-5xl mx-auto mb-6 px-2">
         <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex items-center gap-4">
           <ShieldCheck className="text-emerald-500 shrink-0" size={20} />
-          <p className="text-[10px] md:text-[11px] font-medium text-slate-400 leading-relaxed italic">
-            <span className="text-emerald-500 font-black uppercase tracking-widest">Note de Transparence :</span> Les données affichées proviennent des flux publics officiels des établissements. Ce radar est un outil indépendant de comparaison algorithmique. Pour plus de détails sur nos sources et calculs, consultez notre <a href="/methodologie" target="_blank" rel="noopener noreferrer" className="text-white underline hover:text-emerald-400">Méthodologie complète</a>.
+          <p className="text-[10px] md:text-[11px] font-medium text-slate-300 leading-relaxed italic">
+            <span className="text-emerald-500 font-black uppercase tracking-widest">Note de Transparence :</span> Les données affichées proviennent des flux publics officiels des établissements. Ce radar est un outil indépendant de comparaison algorithmique. Pour plus de détails sur nos sources et calculs, consultez notre <a href="/methodologie" rel="noopener noreferrer" className="text-white underline hover:text-emerald-400">Méthodologie complète</a>.
           </p>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function RadarEliteFinal() {
                               ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse' 
                               : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
                           }`} />
-                          <span className={`text-[8px] font-bold uppercase tracking-widest ${isOutdated ? 'text-red-400' : 'text-slate-400'}`}>
+                          <span className={`text-[8px] font-bold uppercase tracking-widest ${isOutdated ? 'text-red-400' : 'text-slate-300'}`}>
                             {isOutdated ? '⚠️ ROBOT HORS-LIGNE' : `Robot Sync : ${isNaN(minutesAgo) ? 'NAN' : minutesAgo}m ago`}
                           </span>
                         </div>
@@ -253,7 +253,7 @@ export default function RadarEliteFinal() {
                   </div>
                   <div className="flex items-center gap-8">
                     <div className="text-left md:text-right">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Taux Direct</p>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Taux Direct</p>
                       <p className="text-2xl md:text-3xl font-black">{displayRate.toFixed(4)}</p>
                     </div>
                     <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} className="text-slate-600 transition-colors group-hover:text-emerald-500">
@@ -265,7 +265,7 @@ export default function RadarEliteFinal() {
                 <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-800/50">
                   <div className="p-6 space-y-2">
                     <div className="flex items-center gap-2 text-emerald-500"><ShieldCheck size={14}/><span className="text-[9px] font-black uppercase">Audit Transparence</span></div>
-                    <p className="text-xs text-slate-400 italic">
+                    <p className="text-xs text-slate-300 italic">
                       "La banque se rémunère <span className="text-white font-bold">{spreadMoney.toFixed(2)} {currentSymbol}</span> sur cette transaction."
                     </p>
                   </div>
@@ -279,7 +279,7 @@ export default function RadarEliteFinal() {
                   </div>
 
                   <div className="p-6 flex flex-col justify-center items-center text-center bg-[#020617]/40">
-                    <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Gain Réel Net</p>
+                    <p className="text-[9px] font-black text-slate-300 uppercase mb-2">Gain Réel Net</p>
                     <div className={`text-3xl font-black ${realProfit > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                       {realProfit > 0 ? '+' : ''}{realProfit.toFixed(2)} {currentSymbol}
                     </div>
@@ -307,7 +307,7 @@ export default function RadarEliteFinal() {
                                 <p className="text-[11px] text-slate-300 leading-relaxed font-bold italic">"{tip}"</p>
                               </div>
                             )) : (
-                              <p className="text-[10px] text-slate-400 italic uppercase">Aucune donnée stratégique pour ce guichet.</p>
+                              <p className="text-[10px] text-slate-300 italic uppercase">Aucune donnée stratégique pour ce guichet.</p>
                             )}
                           </div>
                         </div>
@@ -362,6 +362,33 @@ export default function RadarEliteFinal() {
           })}
         </AnimatePresence>
       </div>
+
+      {/* FOOTER MINIMALISTE */}
+      <footer className="max-w-5xl mx-auto mt-20 pb-10 px-2 border-t border-slate-800/50 pt-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-center md:text-left">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+              © 2026 RADAR.IO — Douvaine, France
+            </p>
+            <p className="text-[9px] text-slate-600 mt-1 uppercase font-bold">
+              Algorithme de comparaison indépendant pour frontaliers
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-center md:items-end gap-2">
+            <a 
+              href="mailto:lucascasanove@yahoo.fr" 
+              className="text-[10px] font-black text-emerald-500 hover:text-white transition-colors uppercase tracking-widest border border-emerald-500/20 px-4 py-2 rounded-lg"
+            >
+              Contact : lucascasanove@yahoo.fr
+            </a>
+            <p className="text-[8px] text-slate-600 uppercase font-black italic">
+              Projet d'expertise informatique - BUT Lyon
+            </p>
+          </div>
+        </div>
+      </footer>
+
     </main>
   );
 }
