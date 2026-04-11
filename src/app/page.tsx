@@ -88,6 +88,13 @@ export default function RadarEliteFinal() {
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-[#020617] text-emerald-500 font-black animate-pulse uppercase tracking-[0.5em]">Initialisation...</div>;
 
+  const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setExpandedId(expandedId === id ? null : id);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#020617] text-white p-4 md:p-10 font-sans selection:bg-emerald-500 pb-20 overflow-x-hidden">
       
@@ -203,6 +210,10 @@ export default function RadarEliteFinal() {
                 {/* Header Carte (Devient clickable pour l'accordéon) */}
                 <div 
                   onClick={() => setExpandedId(isExpanded ? null : ex.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => handleKeyDown(e, ex.id)}
+                  aria-expanded={isExpanded}
                   className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800/50 cursor-pointer group"
                 >
                   <div className="flex items-center gap-4">
