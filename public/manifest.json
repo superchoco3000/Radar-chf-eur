@@ -1,0 +1,9 @@
+{
+  "name": "Radar Elite CHF/EUR",
+  "short_name": "Radar Elite",
+  "description": "Taux de change en temps réel pour frontaliers (Frontières du Grand Genève).",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb"
+}
