@@ -359,7 +359,7 @@ export default function RadarEliteFinal() {
                             ? (ex.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ex.address)}` : "#") 
                             : (ex.website_url || "#")
                           } 
-                          target="_blank"
+                          target="_blank" 
                           rel="noopener noreferrer"
                           className="w-full flex items-center justify-center gap-3 py-6 rounded-2xl bg-white text-black font-black uppercase text-[11px] tracking-[0.2em] hover:bg-emerald-400 transition-all shadow-lg active:scale-95"
                         >
