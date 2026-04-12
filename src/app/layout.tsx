@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Radar Elite CHF/EUR",
   description: "Taux de change en temps réel pour frontaliers (Frontières du Grand Genève).",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon-512x512.png", // Force l'icône de l'onglet
+    apple: "/icon-512x512.png", // Force l'icône sur iPhone
+  },
 };
 
 export default function RootLayout({
