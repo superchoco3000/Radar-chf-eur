@@ -110,7 +110,7 @@ export default function RadarEliteFinal() {
               <Zap size={14} fill="currentColor" /> Scan Stratégique Actif
             </div>
             <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">
-              RADAR<span className="text-emerald-500">.</span>IO
+              RADAR<span className="text-emerald-500">.</span>ELITE
             </h1>
             <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic">Scan : {lastScan}</p>
           </div>
@@ -388,7 +388,7 @@ export default function RadarEliteFinal() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
-              © 2026 RADAR.IO — Douvaine, France
+              © 2026 RADAR ELITE — Douvaine, France
             </p>
             <p className="text-[9px] text-slate-600 mt-1 uppercase font-bold">
               Algorithme de comparaison indépendant pour frontaliers
