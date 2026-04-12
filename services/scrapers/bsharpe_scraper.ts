@@ -14,7 +14,7 @@ console.log("DEBUG - KEY Start:", SUPABASE_KEY?.substring(0, 5));
 
 // Log de diagnostic pour vérifier que les clés sont bien chargées
 if (SUPABASE_KEY) {
-    console.log(`🔑 Clé détectée (début) : ${SUPABASE_KEY.substring(0, 10)}...`);
+    console.log(`🔑 Clé détectée (début) : ${SUPABASE_KEY.substring(0, 2)}...`);
 } else {
     console.log("⚠️ Aucune clé trouvée dans l'environnement local.");
 }
@@ -75,8 +75,7 @@ async function scrapeBSharpe() {
             })
             .eq('id', BSHARPE_ID);
 
-          if (updateErr) console.error("❌ Erreur Update :", updateErr.message);
-
+          if (updateErr) console.error("💥 Erreur lors de l'extraction :", updateErr instanceof Error ? updateErr.message : updateErr);
           // ✅ 2. INSERT : Ajout du point sur le graphique (Table exchange_rates)
           const { error: histError } = await supabase
             .from('exchange_rates')
