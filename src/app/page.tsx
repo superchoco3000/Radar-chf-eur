@@ -211,6 +211,8 @@ export default function RadarEliteFinal() {
             const isOutdated = !isNaN(minutesAgo) && minutesAgo > 30;
 
             const isExpanded = expandedId === ex.id;
+            const isSunday = new Date().getDay() === 0;
+            const isOfficialBody = ex.name.toUpperCase().includes('DOUANE') || ex.name.toUpperCase().includes('OFFICIEL');
             const tips = formatSpecialConditions(ex.special_conditions);
 
             return (
@@ -242,10 +244,17 @@ export default function RadarEliteFinal() {
                           <div className={`w-1.5 h-1.5 rounded-full ${
                             isOutdated 
                               ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse' 
-                              : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
+                              : (isSunday && isOfficialBody ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]')
                           }`} />
-                          <span className={`text-[8px] font-bold uppercase tracking-widest ${isOutdated ? 'text-red-400' : 'text-slate-300'}`}>
-                            {isOutdated ? '⚠️ ROBOT HORS-LIGNE' : `Robot Sync : ${isNaN(minutesAgo) ? 'NAN' : minutesAgo}m ago`}
+                          <span className={`text-[8px] font-bold uppercase tracking-widest ${
+                            isOutdated ? 'text-red-400' : (isSunday && isOfficialBody ? 'text-amber-500' : 'text-slate-400')
+                          }`}>
+                            {isOutdated 
+                              ? '⚠️ ROBOT HORS-LIGNE' 
+                              : (isSunday && isOfficialBody 
+                                  ? "💤 Marché fermé (Taux du Samedi)" 
+                                  : `Robot Sync : ${isNaN(minutesAgo) ? 'NAN' : minutesAgo}m ago`)
+                            }
                           </span>
                         </div>
                       </div>
@@ -273,9 +282,20 @@ export default function RadarEliteFinal() {
                   <div className="p-6 space-y-2 bg-slate-900/20">
                     <div className="flex items-center gap-2 text-blue-400"><Clock size={14}/><span className="text-[9px] font-black uppercase">Statut</span></div>
                     <p className="text-[11px] text-slate-300 font-bold uppercase tracking-tight">
-                      {ex.opening_hours || "Consultez les horaires officiels"}
+                      {isSunday && isOfficialBody 
+                        ? "🚫 Marchés Fermés" 
+                        : (ex.opening_hours || "Consultez les horaires officiels")
+                      }
                     </p>
-                    <p className="text-[9px] text-amber-500 font-black italic uppercase tracking-tighter animate-pulse">Cliquez pour l'expertise infiltrée</p>
+                    {isSunday && isOfficialBody ? (
+                      <p className="text-[9px] text-amber-500 font-black italic uppercase tracking-tighter animate-pulse">
+                        Reprise des cotations Lundi
+                      </p>
+                    ) : (
+                      <p className="text-[9px] text-amber-500 font-black italic uppercase tracking-tighter">
+                        Cliquez pour l'expertise infiltrée
+                      </p>
+                    )}
                   </div>
 
                   <div className="p-6 flex flex-col justify-center items-center text-center bg-[#020617]/40">
