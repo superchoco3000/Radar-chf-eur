@@ -12,12 +12,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// src/app/layout.tsx
+
 export const metadata: Metadata = {
   title: "Radar Elite CHF/EUR",
-  description: "Taux de change en temps réel pour frontaliers (Frontières du Grand Genève).",
+  description: "Taux de change en temps réel pour frontaliers (Grand Genève).",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon-512x512.png", // Force l'icône de l'onglet
+    icon: [
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+      // On utilise ton image de 512px pour tout, c'est suffisant
+    ],
     apple: "/icon-512x512.png", // Force l'icône sur iPhone
   },
 };
