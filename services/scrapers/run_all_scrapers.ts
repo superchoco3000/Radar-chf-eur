@@ -7,10 +7,13 @@ const scrapers = [
   'bcge_scraper.ts',
   'bcv_scraper.ts',
   'bsharpe_scraper.ts',
+  'bens_shop_scraper.ts',
   'change_geneve_scraper.ts',
   'changenligne_scraper.ts',
   'changesavoisien_scraper.ts',
+  'changegroup_scraper.ts',
   'douane_officielle_scraper.ts',
+  'global_exchange_scraper.ts',
   'ibani_scraper.ts',
   'leman_montblanc_scraper.ts',
   'lyland_scraper.ts',
@@ -21,10 +24,9 @@ const scrapers = [
   'raiffeisen_scraper.ts',
   'revolut_scraper.ts',
   'telexoo_scraper.ts',
-  'wise_scraper.ts',
-  'global_exchange_scraper.ts',
-  'bens_shop_scraper.ts',
-  'changegroup_scraper.ts'
+  'wise_scraper.ts'
+  
+  
 ];
 
 async function runArmy() {

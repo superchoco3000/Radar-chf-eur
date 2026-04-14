@@ -10,11 +10,11 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABAS
 
 // AJOUTE CECI :
 console.log("DEBUG - KEY Length:", SUPABASE_KEY?.length); 
-console.log("DEBUG - KEY Start:", SUPABASE_KEY?.substring(0, 5));
+console.log("DEBUG - KEY Start:", SUPABASE_KEY?.substring(0, 2));
 
 // Log de diagnostic pour vérifier que les clés sont bien chargées
 if (SUPABASE_KEY) {
-    console.log(`🔑 Clé détectée (début) : ${SUPABASE_KEY.substring(0, 10)}...`);
+    console.log(`🔑 Clé détectée (début) : ${SUPABASE_KEY.substring(0, 2)}...`);
 } else {
     console.log("⚠️ Aucune clé trouvée dans l'environnement local.");
 }
