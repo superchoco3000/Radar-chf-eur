@@ -10,13 +10,11 @@ const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!);
 
 const BENS_SHOP_ID = '338d5365-d63d-4ecd-973c-34b37e450b96';
 
-async function scrapeBensShop() {
-  console.log("🚀 Mission Ben's Shop : Calcul & Synchro Live...");
+// On encapsule TA logique dans une fonction répétable
+async function runScraperLogic(attempt: number) {
+  console.log(`🚀 Mission Ben's Shop : Tentative ${attempt}/3...`);
   
-  const browser = await chromium.launch({ 
-    headless: true // Garde true pour GitHub Actions, mais tu peux mettre false pour débugger chez toi
-  });
-  
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     viewport: { width: 1280, height: 800 }
@@ -25,73 +23,68 @@ async function scrapeBensShop() {
   const page = await context.newPage();
 
   try {
-    // 1. Navigation plus permissive
+    // --- TA LOGIQUE FONCTIONNELLE DÉBUT ---
     await page.goto('https://bens-shop-change.ch/change', { 
         waitUntil: 'domcontentloaded', 
         timeout: 60000 
     });
 
-    console.log("📡 Page chargée. Recherche des éléments...");
-
-    // 2. Gestion du bandeau cookie s'il existe
     const cookieBtn = page.locator('button:has-text("Accepter"), .cc-allow, #cookie-accept').first();
     if (await cookieBtn.isVisible()) {
         await cookieBtn.click();
         await page.waitForTimeout(500);
     }
 
-    // 3. Simulation humaine : on tape 1000 CHF
     const inputCHF = page.locator('input[type="number"]').first();
     await inputCHF.click();
     await inputCHF.fill('1000');
     
-    // On attend que le calcul se fasse (important sur ce site)
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2500); // Un peu plus de temps pour le calcul
 
-    // 4. Lecture du résultat en EUR
     const resultEURRaw = await page.locator('input[type="number"]').nth(1).inputValue();
     
+    if (!resultEURRaw || resultEURRaw === "") throw new Error("Champ vide");
+
     const totalEur = parseFloat(resultEURRaw.replace(',', '.').trim());
     const rateToStore = parseFloat((totalEur / 1000).toFixed(4));
 
     if (!isNaN(rateToStore) && rateToStore > 0) {
-      console.log(`📊 Résultat Capturé : 1000 CHF -> ${totalEur} EUR | Taux : ${rateToStore}`);
-
-      // ✅ SYNCHRO LIVE SUR TON SITE (Table exchanges)
-      const { error: err1 } = await supabase
-        .from('exchanges')
-        .update({ 
+      // Synchro Supabase
+      const { error: err1 } = await supabase.from('exchanges').update({ 
           last_rate: rateToStore, 
           update_at: new Date().toISOString() 
-        })
-        .eq('id', BENS_SHOP_ID);
+      }).eq('id', BENS_SHOP_ID);
 
-      // ✅ SYNCHRO GRAPHIQUE (Table exchange_rates)
-      const { error: err2 } = await supabase
-        .from('exchange_rates')
-        .insert({
+      const { error: err2 } = await supabase.from('exchange_rates').insert({
           exchange_id: BENS_SHOP_ID,
           rate_chf_eur: rateToStore,
           captured_at: new Date().toISOString()
-        });
+      });
 
       if (!err1 && !err2) {
-        console.log("✨ Succès : Ben's Shop est à jour sur le radar !");
-      } else {
-        console.error("❌ Erreur Supabase:", err1 || err2);
+        console.log("✨ Succès : Ben's Shop est à jour !");
+        return true; // Mission accomplie
       }
-    } else {
-        throw new Error("Impossible de lire le montant converti.");
     }
+    throw new Error("Calcul du taux invalide");
+    // --- TA LOGIQUE FONCTIONNELLE FIN ---
 
   } catch (err: any) {
-    console.error("💥 Erreur Critique :", err.message);
-    // On prend une photo de l'erreur pour voir ce qui bloque
-    await page.screenshot({ path: 'debug_bens.png' });
-    console.log("📸 Capture d'écran de l'erreur enregistrée (debug_bens.png)");
+    console.error(`⚠️ Erreur tentative ${attempt}:`, err.message);
+    if (attempt === 3) await page.screenshot({ path: 'debug_bens.png' });
+    return false; // Échec de cette tentative
   } finally {
     await browser.close();
   }
 }
 
-scrapeBensShop();
+// Le chef d'orchestre qui gère les 3 essais
+async function main() {
+  for (let i = 1; i <= 3; i++) {
+    const success = await runScraperLogic(i);
+    if (success) break; // Si ça marche, on arrête les frais
+    if (i < 3) await new Promise(res => setTimeout(res, 5000)); // Attente avant retry
+  }
+}
+
+main();
