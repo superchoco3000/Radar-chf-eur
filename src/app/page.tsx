@@ -17,6 +17,8 @@ const AVG_CONSUMPTION = 7 / 100;
 const COST_PER_KM = (GAS_PRICE_LITER * AVG_CONSUMPTION) + 0.10; 
 const TRAVEL_EXPENSE_TOTAL = Math.ceil((38 * COST_PER_KM) + (30 * 0.75)) + 2; 
 
+export const dynamic = 'force-dynamic';
+
 export default function RadarEliteFinal() {
   const [exchanges, setExchanges] = useState<any[]>([]);
   const [rawHistory, setRawHistory] = useState<any[]>([]); 
