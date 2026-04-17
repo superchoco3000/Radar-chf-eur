@@ -253,7 +253,7 @@ export default function RadarEliteFinal() {
             const minutesAgo = ex.update_at ? Math.floor((new Date().getTime() - new Date(ex.update_at).getTime()) / 60000) : NaN;
             const travelCosts = ex.type === 'physical' ? TRAVEL_EXPENSE_TOTAL : 0;
             const realProfit = ((displayRate - refRate) * amount) - travelCosts - fees;
-            const isOutdated = !isNaN(minutesAgo) && minutesAgo > 30;
+            const isOutdated = !isNaN(minutesAgo) && minutesAgo > 65;
 
             const isExpanded = expandedId === ex.id;
             const isSunday = new Date().getDay() === 0;
