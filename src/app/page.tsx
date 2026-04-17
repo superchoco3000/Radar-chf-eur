@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { LineChart, Line, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, TrendingUp, ArrowRightLeft, MousePointer2, ShieldCheck, Clock, ChevronDown, Lightbulb, Target, Users } from 'lucide-react';
+import { Zap, TrendingUp, ArrowRightLeft, MousePointer2, ShieldCheck, Clock, ChevronDown, Lightbulb, Target, Users, Cloud, Wifi, WifiOff, ChevronUp } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!, 
@@ -28,8 +28,24 @@ export default function RadarEliteFinal() {
   const [lastScan, setLastScan] = useState<string>('');
   const [officialRateRef, setOfficialRateRef] = useState<number>(1.0820);
   const [switchRotation, setSwitchRotation] = useState(0);
+  const [isOffline, setIsOffline] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [dataSaver, setDataSaver] = useState(false);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Detect slow/data-saving connections
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const conn = (navigator as any).connection;
+      if (conn) {
+        const check = () => setDataSaver(conn.saveData === true || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g');
+        check();
+        conn.addEventListener('change', check);
+        return () => conn.removeEventListener('change', check);
+      }
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -37,13 +53,14 @@ export default function RadarEliteFinal() {
         supabase.from('exchanges').select('*'),
         supabase.from('exchange_rates').select(`rate_chf_eur, captured_at, exchanges(name)`).order('captured_at', { ascending: false }).limit(350)
       ]);
+      if (exRes.error) throw exRes.error;
       if (exRes.data) {
         setExchanges(exRes.data);
-        const off = exRes.data.find(ex => ex.name === 'OFFICIEL');
+        setIsOffline(false);
+        const off = exRes.data.find((ex: any) => ex.name === 'OFFICIEL');
         if (off) setOfficialRateRef(off.last_rate);
-        
-        // Mode Hors-ligne : Sauvegarde des taux
         localStorage.setItem('cached_rates', JSON.stringify(exRes.data));
+        localStorage.setItem('cached_rates_ts', new Date().toISOString());
       }
       if (histRes.data) {
         const grouped = histRes.data.reduce((acc: any, row: any) => {
@@ -56,11 +73,15 @@ export default function RadarEliteFinal() {
         setRawHistory(Object.values(grouped).sort((a: any, b: any) => a.timestamp - b.timestamp));
       }
       setLastScan(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
-    } catch (err) { 
-      console.error(err);
-      // Récupération cache si réseau coupé
+    } catch (err) {
+      console.error('[RADAR] Réseau indisponible, chargement du cache local…', err);
       const saved = localStorage.getItem('cached_rates');
-      if (saved) setExchanges(JSON.parse(saved));
+      if (saved) {
+        setExchanges(JSON.parse(saved));
+        setIsOffline(true);
+        const ts = localStorage.getItem('cached_rates_ts');
+        if (ts) setLastScan(new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+      }
     } finally { setLoading(false); }
   }, []);
 
@@ -108,8 +129,24 @@ export default function RadarEliteFinal() {
       <div className="max-w-6xl mx-auto mb-10 space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-emerald-500 font-black tracking-[0.4em] text-[10px] uppercase">
-              <Zap size={14} fill="currentColor" /> Scan Stratégique Actif
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 text-emerald-500 font-black tracking-[0.4em] text-[10px] uppercase">
+                <Zap size={14} fill="currentColor" /> Scan Stratégique Actif
+              </div>
+              {/* Live / Cache indicator */}
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border backdrop-blur-sm transition-all duration-500 ${
+                isOffline
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+              }`}>
+                {isOffline ? <WifiOff size={10} /> : <Wifi size={10} />}
+                {isOffline ? 'Cache' : 'Live'}
+              </div>
+              {dataSaver && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-orange-500/10 text-orange-400 border border-orange-500/30">
+                  📡 Éco-Data
+                </div>
+              )}
             </div>
             <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">
               RADAR<span className="text-emerald-500">.</span>ELITE
@@ -141,7 +178,7 @@ export default function RadarEliteFinal() {
             </div>
           </div>
           <div className="h-[200px] md:h-[350px] w-full">
-            {exchanges.length > 0 && (
+            {exchanges.length > 0 && !dataSaver && (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} opacity={0.3} />
@@ -153,6 +190,12 @@ export default function RadarEliteFinal() {
                   ))}
                 </LineChart>
               </ResponsiveContainer>
+            )}
+            {dataSaver && (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-slate-900/50 rounded-2xl border border-slate-800/50">
+                <WifiOff size={32} className="mb-2 opacity-50" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Graphique masqué (Éco-Data)</p>
+              </div>
             )}
           </div>
         </div>
@@ -200,7 +243,7 @@ export default function RadarEliteFinal() {
 
       <div className="max-w-5xl mx-auto space-y-6 px-2">
         <AnimatePresence>
-          {validatedExchanges.slice(0, 8).map((ex, index) => {
+          {validatedExchanges.slice(0, showAll ? undefined : 3).map((ex, index) => {
             const displayRate = getDisplayRate(ex.last_rate);
             const refRate = getDisplayRate(officialRateRef);
             const currentSymbol = isCfhToEur ? '€' : 'CHF';
@@ -383,6 +426,21 @@ export default function RadarEliteFinal() {
             );
           })}
         </AnimatePresence>
+
+        {validatedExchanges.length > 3 && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-900 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors uppercase tracking-[0.2em] font-black text-[10px]"
+            >
+              {showAll ? (
+                <>Réduire la liste <ChevronUp size={16} /></>
+              ) : (
+                <>Voir les {validatedExchanges.length} bureaux comparés <ChevronDown size={16} /></>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* FOOTER MINIMALISTE */}
