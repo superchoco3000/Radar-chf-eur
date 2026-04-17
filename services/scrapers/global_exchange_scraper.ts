@@ -21,6 +21,8 @@ async function scrapeGlobalExchange() {
   const page = await context.newPage();
 
   try {
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://www.global-exchange.ch/es-ES/', { 
       waitUntil: 'networkidle', // On attend que le réseau se calme
       timeout: 60000 

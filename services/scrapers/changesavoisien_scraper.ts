@@ -40,6 +40,8 @@ async function scrapeSavoisienVision() {
 
   try {
     // 1. Navigation avec un délai plus long et moins de restrictions
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://changesavoisien.fr/', { waitUntil: 'load', timeout: 60000 });
     
     console.log("📸 Capture d'écran de la grille des cours...");

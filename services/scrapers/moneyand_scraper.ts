@@ -31,6 +31,8 @@ async function scrapeMoneyAnd() {
   const page = await browser.newPage();
 
   try {
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://moneyand.com/', { waitUntil: 'domcontentloaded' });
 
     const eurOption = page.locator('#currency_0 option[value="EUR"]');

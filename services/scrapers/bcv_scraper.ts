@@ -18,6 +18,8 @@ async function scrapeBCV() {
 
   try {
     // Navigation vers la page des cours
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://www.bcv.ch/fr/home/informations-financieres/devises-et-billets.html', { 
         waitUntil: 'networkidle',
         timeout: 30000 

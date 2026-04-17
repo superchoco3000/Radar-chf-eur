@@ -32,6 +32,8 @@ async function scrapeBCGE() {
   const page = await browser.newPage();
 
   try {
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://www.bcge.ch/fr/cours-billets-et-devises', { 
         waitUntil: 'networkidle',
         timeout: 30000 
@@ -54,7 +56,10 @@ async function scrapeBCGE() {
       // ✅ Mise à jour de la table principale
       const { error: updateError } = await supabase
         .from('exchanges')
-        .update({ last_rate: finalRate })
+        .update({ 
+          last_rate: finalRate, 
+          update_at: new Date().toISOString() // ✅ Correct
+        })
         .eq('id', BCGE_DB_ID);
 
       if (updateError) throw updateError;

@@ -38,6 +38,9 @@ async function scrapeRevolut() {
   const page = await context.newPage();
 
   try {
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
+
     // 1. Navigation vers le convertisseur Revolut
     await page.goto('https://www.revolut.com/fr-FR/currency-converter/', { 
       waitUntil: 'networkidle', 
@@ -72,8 +75,8 @@ async function scrapeRevolut() {
 
     if (match) {
       const rateOnPage = parseFloat(match[1].replace(',', '.'));
-      const rateRead = 0.9235; // Taux de conversion inverse pour obtenir le taux EUR/CHF
-      const finalRate = parseFloat((1 / rateRead).toFixed(4));      
+      // Taux de conversion inverse pour obtenir le taux EUR/CHF
+      const finalRate = parseFloat((1 / rateOnPage).toFixed(4));      
       
       console.log(`🎯 Taux trouvé : 1 EUR = ${rateOnPage} CHF`);
       console.log(`💰 Radar : 1 CHF = ${finalRate} EUR`);

@@ -24,6 +24,8 @@ async function runScraperLogic(attempt: number) {
 
   try {
     // --- TA LOGIQUE FONCTIONNELLE DÉBUT ---
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://bens-shop-change.ch/change', { 
         waitUntil: 'domcontentloaded', 
         timeout: 60000 

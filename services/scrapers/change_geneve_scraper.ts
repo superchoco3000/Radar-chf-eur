@@ -32,6 +32,8 @@ async function scrapeChangeGeneve() {
   const page = await browser.newPage();
 
   try {
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://www.change-geneve.com/', { waitUntil: 'networkidle' });
 
     console.log("⏳ Attente du chargement des taux (2s)...");

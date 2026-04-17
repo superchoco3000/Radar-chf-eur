@@ -19,6 +19,8 @@ async function scrapeChangeEnLigne() {
   const page = await context.newPage();
 
   try {
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://changenligne.ch/taux-de-change/chfeur/', { waitUntil: 'networkidle' });
 
     // 1. Double Nettoyage des Cookies

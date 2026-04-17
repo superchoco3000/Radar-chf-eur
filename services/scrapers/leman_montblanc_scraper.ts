@@ -34,6 +34,8 @@ async function scrapeLemanMB() {
 
   try {
     // 1. Navigation
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://changelemanmontblanc.fr/', { waitUntil: 'networkidle', timeout: 60000 });
 
     console.log("🔍 Extraction du taux EUR/CHF...");

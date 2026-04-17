@@ -21,6 +21,8 @@ async function scrapeRaiffeisen() {
   try {
     // ÉTAPE 1 : Page principale
     console.log("📸 Étape 1 : Analyse de la page principale...");
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://boerse.raiffeisen.ch/fr-ch/', { waitUntil: 'networkidle' });
     await page.screenshot({ path: '1_analyse_principale.png' });
 

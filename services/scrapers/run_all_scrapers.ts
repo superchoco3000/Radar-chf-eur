@@ -19,31 +19,38 @@ const scrapers = [
   'lyland_scraper.ts',
   'meilleurtaux_scraper.ts',
   'migros_scraper.ts',
-  'mon_taux_scraper.ts', // Vérifie bien que ce fichier s'appelle exactement comme ça
+  'mon_taux_scraper.ts',
   'moneyand_scraper.ts',
+  'official_rate_scraper.ts',
   'raiffeisen_scraper.ts',
   'revolut_scraper.ts',
   'telexoo_scraper.ts',
   'wise_scraper.ts'
-  
-  
 ];
 
 async function runArmy() {
-  console.log("🎖️ Revue des troupes : Lancement de l'armée de 18 scrapers...");
-  
-  for (const scraper of scrapers) {
-    try {
-      console.log(`📡 Déploiement de : ${scraper}...`);
-      // Utilisation du chemin relatif correct pour GitHub Actions
-      const { stdout } = await execPromise(`npx tsx services/scrapers/${scraper}`);
-      console.log(stdout);
-    } catch (error: any) {
-      console.error(`❌ Échec du soldat ${scraper}:`, error.message);
-      // On ne stoppe pas la boucle pour qu'un seul robot en panne ne bloque pas les 17 autres
-    }
+  console.log(`🎖️ Revue des troupes : Lancement de l'armée de ${scrapers.length} scrapers...`);
+    
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < scrapers.length; i += BATCH_SIZE) {
+    const batch = scrapers.slice(i, i + BATCH_SIZE);
+    console.log(`\n📦 Lancement du batch ${Math.floor(i/BATCH_SIZE) + 1} : ${batch.join(', ')}`);
+    
+    const results = await Promise.allSettled(
+      batch.map(s => execPromise(`npx tsx services/scrapers/${s}`, { timeout: 120000 }))
+    );
+    
+    results.forEach((result, idx) => {
+        const name = batch[idx];
+        if (result.status === 'fulfilled') {
+            console.log(`✅ ${name} : Terminé avec succès`);
+        } else {
+            console.error(`❌ ${name} : ÉCHEC - ${result.reason?.message || 'Erreur inconnue'}`);
+        }
+    });
   }
-  console.log("🏁 Fin de la mission globale.");
+
+  console.log("\n🏁 Fin de la mission globale. Tous los batches han sido procesados.");
 }
 
-runArmy();
+runArmy();

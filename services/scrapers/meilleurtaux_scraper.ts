@@ -18,8 +18,8 @@ async function scrapeMeilleurTaux() {
   const page = await context.newPage();
 
   try {
-    // On bloque les images pour aller plus vite
-    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg}', route => route.abort());
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
 
     await page.goto('https://www.meilleurtauxdechange.ch/', { waitUntil: 'domcontentloaded' });
 

@@ -37,6 +37,8 @@ async function scrapeTelexooVision() {
 
   try {
     // 1. Navigation
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://www.telexoo.com/', { waitUntil: 'networkidle' });
     
     console.log("📸 Capture du convertisseur Telexoo...");

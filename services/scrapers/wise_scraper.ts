@@ -34,6 +34,8 @@ async function scrapeWise() {
 
   try {
     // Navigation vers le comparateur CHF -> EUR
+    // 0. Bloqueo de recursos pesados para optimizar RAM
+    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
     await page.goto('https://wise.com/fr/currency-converter/chf-to-eur-rate', { 
       waitUntil: 'networkidle' 
     });

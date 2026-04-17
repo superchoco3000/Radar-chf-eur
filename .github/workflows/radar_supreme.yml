@@ -2,7 +2,7 @@ name: Radar_Main_Update
 
 on:
   schedule:
-    - cron: '*/30 4-18 * * *' # Tourne toutes les heures de 7h à 19h
+   - cron: '*/30 5-17 * * 1-5'  # Tourne toutes les heures de 7h à 19h
   workflow_dispatch: 
 
 jobs:
