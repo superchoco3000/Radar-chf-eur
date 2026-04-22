@@ -472,7 +472,7 @@ export default function RadarEliteFinal() {
                       Mis à jour {lastScan}
                     </span>
                   </div>
-
+ 
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                     <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
                       <div className="mb-1.5 flex items-center justify-between">
