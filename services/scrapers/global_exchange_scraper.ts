@@ -4,88 +4,97 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local', override: true });
 
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!, 
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY!
+);
 
-// 🔑 METS BIEN TON ID ICI
 const GLOBAL_ID = '5537b916-006d-4ad5-b84f-869e6175e99c'; 
 
 async function scrapeGlobalExchange() {
-  console.log("🚀 Mission Global Exchange : Infiltration & Interaction...");
+  console.log("🚀 Iniciando Global Exchange (Versión Final)...");
   
-  // On lance en mode "faux humain"
   const browser = await chromium.launch({ headless: true }); 
-  const context = await browser.newContext({
+  const context = await browser.newContext({ 
     viewport: { width: 1280, height: 900 },
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
   });
   const page = await context.newPage();
 
   try {
-    // 0. Bloqueo de recursos pesados para optimizar RAM
-    await page.route('**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2}', route => route.abort());
-    await page.goto('https://www.global-exchange.ch/es-ES/', { 
-      waitUntil: 'networkidle', // On attend que le réseau se calme
-      timeout: 60000 
-    });
-
-    // 1. On dégage le cookie wall proprement
-    console.log("🧹 Nettoyage du terrain...");
-    await page.evaluate(() => {
-      const banner = document.getElementById('onetrust-banner-sdk');
-      if (banner) banner.remove();
-    });
-
-    // 2. INTERACTION : On clique sur le montant pour "réveiller" le site
-    console.log("🖱️ Réveil du convertisseur...");
-    const selector = 'input[name="amountOrigin"], .input-chf, #amount-origin';
-    try {
-        await page.locator(selector).first().click();
-        await page.locator(selector).first().fill('1000');
-    } catch(e) {
-        console.log("ℹ️ Input direct non trouvé, tentative de scan global...");
-    }
-
-    // 3. ATTENTE ÉTENDUE
-    console.log("⏳ Attente du calcul (7s)...");
-    await page.waitForTimeout(7000); 
-
-    // 4. EXTRACTION PAR TOUS LES MOYENS
-    const bodyText = await page.innerText('body');
+    // PASO 1: CARGA DIRECTA
+    console.log("📡 Navegando a la calculadora...");
+    await page.goto('https://www.globalexchange.es/cambio-moneda', { waitUntil: 'networkidle', timeout: 60000 });
     
-    // Regex ultra-flexible : on cherche un chiffre après "1 CHF =" ou "1 CHF"
-    // qui ressemble à 1.0XXX ou 0.9XXX
-    const regex = /1\s?CHF\s?=\s?(\d+[.,]\d+)/i;
-    const match = bodyText.match(regex);
+    // Limpieza de modales y banners
+    await page.evaluate(() => {
+      const selectors = ['#onetrust-banner-sdk', '.cookie-banner', '.Modal-main', '.Modal-legal', '.modal-backdrop'];
+      selectors.forEach(s => document.querySelector(s)?.remove());
+    });
+
+    // PASO 2: SELECCIONAR CHF
+    console.log("🖱️ Abriendo selector de divisas...");
+    // El trigger verificado es .CurrencySelect-optionSelected
+    const trigger = page.locator('.CurrencySelect-optionSelected').first();
+    await trigger.waitFor({ state: 'visible', timeout: 10000 });
+    await trigger.click({ force: true });
+    
+    console.log("⌨️ Escribiendo 'chf'...");
+    // El buscador aparece como un input con placeholder o clase específica
+    const searchInput = page.locator('input[placeholder*="moneda" i], .Input-element').first();
+    await searchInput.waitFor({ state: 'visible' });
+    await searchInput.fill('chf');
+    await page.waitForTimeout(2000);
+
+    console.log("✅ Seleccionando segunda opción (Suiza)...");
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+
+    // PASO 3: EXTRACCIÓN
+    console.log("⏳ Esperando actualización del precio...");
+    await page.waitForTimeout(5000);
+
+    const bodyText = await page.innerText('body');
+    // Buscamos el patrón "1 EUR = X,XXXXXX CHF"
+    const rateRegex = /1\s?EUR\s?=\s?(\d+[.,]\d+)\s?CHF/i;
+    const match = bodyText.match(rateRegex);
 
     if (match && match[1]) {
-      const finalRate = parseFloat(match[1].replace(',', '.'));
-      console.log(`✅ Cible verrouillée : 1 CHF = ${finalRate} EUR`);
+      const eurToChf = parseFloat(match[1].replace(',', '.'));
+      // Invertimos para obtener 1 CHF -> EUR
+      const rateChfEur = parseFloat((1 / eurToChf).toFixed(6));
+      
+      console.log(`🎯 Tasa Localizada: 1 EUR = ${eurToChf} CHF`);
+      console.log(`🎯 Tasa Calculada: 1 CHF = ${rateChfEur} EUR`);
 
-      // --- SYNCHRO LIVE ---
-      await supabase.from('exchanges').update({ 
-          last_rate: finalRate,
-          update_at: new Date().toISOString() 
-      }).eq('id', GLOBAL_ID);
+      // ACTUALIZACIÓN SUPABASE
+      const { error: updateError } = await supabase
+        .from('exchanges')
+        .update({ last_rate: rateChfEur, update_at: new Date().toISOString() })
+        .eq('id', GLOBAL_ID);
 
-      await supabase.from('exchange_rates').insert({ 
-          exchange_id: GLOBAL_ID, 
-          rate_chf_eur: finalRate,
-          captured_at: new Date().toISOString()
-      });
+      const { error: insertError } = await supabase
+        .from('exchange_rates')
+        .insert({ exchange_id: GLOBAL_ID, rate_chf_eur: rateChfEur });
 
-      console.log("✨ Synchronisation LIVE terminée.");
+      if (!updateError && !insertError) {
+        console.log("🚀 Base de datos sincronizada correctamente.");
+      } else {
+        console.error("❌ Error de sincronización:", updateError || insertError);
+      }
     } else {
-      console.error("❌ Le taux est resté invisible.");
-      // On sauvegarde ce que le robot a vu pour comprendre
-      await page.screenshot({ path: 'debug_global_failed.png' });
-      console.log("📸 Regarde 'debug_global_failed.png' pour voir ce qui bloque.");
+      console.error("❌ No se encontró la tasa en el DOM. Revisa la captura DEBUG_GLOBAL.png");
+      await page.screenshot({ path: 'DEBUG_GLOBAL.png' });
     }
 
   } catch (err: any) {
-    console.error("💥 Crash :", err.message);
+    console.error("❌ Fallo en el proceso:", err.message);
+    await page.screenshot({ path: 'ERROR_GLOBAL_FINAL.png' });
   } finally {
     await browser.close();
   }
 }
 
 scrapeGlobalExchange();
+
