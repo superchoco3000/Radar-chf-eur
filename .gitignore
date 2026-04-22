@@ -6,3 +6,6 @@ node_modules/
 *.tmp
 *.env.local
 desktop.ini
+
+.vercel
+.env*.local
