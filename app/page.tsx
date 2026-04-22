@@ -21,6 +21,8 @@ const AVG_CONSUMPTION = 7 / 100;
 const COST_PER_KM = (GAS_PRICE_LITER * AVG_CONSUMPTION) + 0.10; 
 const TRAVEL_EXPENSE_TOTAL = Math.ceil((38 * COST_PER_KM) + (30 * 0.75)) + 2; 
 
+console.log("CHRONO-CHECK: 2024-V3");
+
 export const dynamic = 'force-dynamic';
 
 export default function RadarEliteFinal() {
