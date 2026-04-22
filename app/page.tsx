@@ -351,7 +351,7 @@ export default function RadarEliteFinal() {
               <Activity className="h-4 w-4" strokeWidth={2.5} />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-[13px] font-semibold tracking-tight">RADAR 2.0</span>
+              <span className="text-[13px] font-semibold tracking-tight">RADAR LIVE</span>
               <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                 CHF / EUR · Terminal v5.0
               </span>
