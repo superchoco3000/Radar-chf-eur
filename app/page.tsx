@@ -347,7 +347,7 @@ export default function RadarEliteFinal() {
       
       {/* Top Bar */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex flex-col sm:flex-row h-auto sm:h-14 max-w-[1400px] items-center gap-4 px-4 py-3 sm:py-0 sm:px-6">
           <div className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-emerald-400/90 to-emerald-600 text-background">
               <Activity className="h-4 w-4" strokeWidth={2.5} />
@@ -475,7 +475,7 @@ export default function RadarEliteFinal() {
                     </span>
                   </div>
  
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-3">
                     <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
                       <div className="mb-1.5 flex items-center justify-between">
                         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -552,7 +552,7 @@ export default function RadarEliteFinal() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -6 }}
                           transition={{ duration: 0.25 }}
-                          className="font-mono text-5xl font-semibold tracking-tight tabular-nums sm:text-6xl"
+                          className="font-mono text-4xl font-semibold tracking-tight tabular-nums sm:text-6xl"
                         >
                           {getDisplayRate(officialRateRef).toFixed(4)}
                           <span className="ml-2 text-xl font-medium text-muted-foreground">
@@ -598,7 +598,7 @@ export default function RadarEliteFinal() {
             </div>
 
             {/* RIGHT - KPI stack */}
-            <div className="grid grid-cols-2 gap-3 self-start lg:grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 self-start lg:grid-cols-2">
               <Card className="bg-background/60 backdrop-blur-xl border-white/10">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
@@ -759,7 +759,7 @@ export default function RadarEliteFinal() {
                     <Button
                       variant="ghost"
                       onClick={() => setExpandedId(expandedId === ex.id ? null : ex.id)}
-                      className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-white/[0.02] sm:px-6 h-auto justify-start"
+                      className="flex w-full flex-col items-start gap-4 px-5 py-4 text-left transition hover:bg-white/[0.02] sm:flex-row sm:items-center sm:px-6 h-auto justify-start"
                     >
                       {/* Rank */}
                       <div
@@ -882,7 +882,7 @@ export default function RadarEliteFinal() {
                                 <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                                   Audit du Spread
                                 </div>
-                                <div className="grid grid-cols-3 gap-3 text-center">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                                   <div>
                                     <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                                       Spread fournisseur
@@ -1201,7 +1201,7 @@ export default function RadarEliteFinal() {
               
               <CardContent className="space-y-6">
                 {/* Inputs Grid */}
-                <div className="grid gap-5 md:grid-cols-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div className="space-y-2">
                     <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-300/80 flex items-center gap-2">
                       <Car className="h-3.5 w-3.5" />
