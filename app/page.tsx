@@ -458,7 +458,7 @@ export default function RadarEliteFinal() {
                 </h1>
                 <p className="max-w-lg text-pretty text-sm leading-6 text-muted-foreground">
                   Audit des spreads en temps réel sur les fournisseurs suisses et français. Optimisé pour les jours de paie,
-                  majorations de week-end et paiements transfrontaliers. [DEPLOY_VERIFIED]
+                  majorations de week-end et paiements transfrontaliers.
                 </p>
               </div>
 

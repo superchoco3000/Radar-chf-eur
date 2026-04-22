@@ -73,3 +73,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  .flex {
+    flex-direction: column;
+  }
+  /* Esto fuerza a que todo se apile en una columna en móviles */
+}
