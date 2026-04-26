@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { LineChart, Line, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Area, AreaChart } from 'recharts';
+import nextDynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, ArrowLeftRight, ArrowUpRight, Bell, Building2, ChevronDown, Clock3, Crown, Fuel, Gauge, Shield, Sparkles, Star, Trophy, TrendingUp, Zap, Wifi, WifiOff, Command, Search, Settings2, Radio, LineChart as LineChartIcon, X, Mail, Sun, Moon, ExternalLink, Info, MapPin, Car } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+
+const RealTimeChart = nextDynamic(() => import('@/components/RealTimeChart'), { ssr: false });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!, 
@@ -50,12 +52,17 @@ export default function RadarEliteFinal() {
   const [fuelType, setFuelType] = useState<string>('SP98');
   const [currentLocation, setCurrentLocation] = useState<string>('Douvaine');
   const [calculatedCost, setCalculatedCost] = useState<number>(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Refs pour smooth scroll
   const providersRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
   const alertsRef = useRef<HTMLDivElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Detect slow/data-saving connections
   useEffect(() => {
@@ -344,6 +351,16 @@ export default function RadarEliteFinal() {
         }}
         aria-hidden
       />
+
+      {/* Floating Info Button */}
+      <Button
+        className="fixed top-4 right-4 z-[9999] h-10 w-10 rounded-full border border-white/10 bg-background/50 p-0 backdrop-blur-md transition-all hover:bg-white/10"
+        variant="ghost"
+        size="icon"
+        onClick={() => setShowRouteModal(true)}
+      >
+        <Info className="h-5 w-5 text-emerald-400" />
+      </Button>
       
       {/* Top Bar */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-background/70 backdrop-blur-xl">
@@ -457,7 +474,7 @@ export default function RadarEliteFinal() {
                   <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent font-bold animate-pulse">pour les frontaliers.</span>
                 </h1>
                 <p className="max-w-lg text-pretty text-sm leading-6 text-muted-foreground">
-                  Audit des spreads en temps réel sur les fournisseurs suisses et français. Optimisé pour les jours de paie,
+                  Audit des spreads en temps réel sobre les fournisseurs suisses et français. Optimisé pour les jours de paie,
                   majorations de week-end et paiements transfrontaliers.
                 </p>
               </div>
@@ -638,13 +655,13 @@ export default function RadarEliteFinal() {
               </Card>
 
               <Card 
-                className="bg-background/60 backdrop-blur-xl border-white/10 cursor-pointer hover:bg-white/[0.08] transition-all duration-200"
+                className={`bg-background/60 backdrop-blur-xl border-white/10 cursor-pointer hover:bg-white/[0.08] transition-all duration-200 relative hover:z-50 ${showTravelTooltip ? 'z-50' : ''}`}
                 onMouseEnter={() => setShowTravelTooltip(true)}
                 onMouseLeave={() => setShowTravelTooltip(false)}
               >
                 <CardContent className="p-4 relative">
                   {showTravelTooltip && (
-                    <div className="absolute right-0 top-0 z-[100] w-96 rounded-lg border border-emerald-400/30 bg-slate-900/95 backdrop-blur-xl p-4 text-xs text-white shadow-2xl">
+                    <div className="fixed sm:fixed inset-x-4 sm:inset-auto sm:right-10 sm:top-20 z-[9999] top-1/2 -translate-y-1/2 sm:translate-y-0 w-auto sm:w-96 rounded-lg border border-emerald-400/30 bg-slate-900/95 backdrop-blur-xl p-4 text-xs text-white shadow-2xl shadow-emerald-400/10">
                       <div className="space-y-3">
                         <div className="font-semibold text-emerald-300 text-sm">Détails du calcul logistique</div>
                         <div className="space-y-2 text-gray-300">
@@ -970,79 +987,14 @@ export default function RadarEliteFinal() {
                   Taux effectif EUR/CHF par fournisseur
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Divergence intrajournalière des spreads par rapport au taux interbancaire. Plus serré est meilleur.
+                  Divergence intrajournalière des spreads par rapport al taux interbancaire. Plus serré est meilleur.
                 </p>
               </div>
             </CardHeader>
 
             <div className="h-[320px] w-full px-6">
-              {!dataSaver && rawHistory.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="fillMid" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="fillBlue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.25} />
-                        <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="rgba(148,163,184,0.08)" vertical={false} />
-                    <XAxis
-                      dataKey="time"
-                      stroke="rgba(148,163,184,0.5)"
-                      tick={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
-                      tickLine={false}
-                      axisLine={{ stroke: "rgba(148,163,184,0.15)" }}
-                    />
-                    <YAxis
-                      domain={["dataMin - 0.002", "dataMax + 0.002"]}
-                      stroke="rgba(148,163,184,0.5)"
-                      tick={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => Number(v).toFixed(3)}
-                      width={56}
-                    />
-                    <Tooltip 
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null;
-                        return (
-                          <Card className="border-white/10 bg-background/90 px-3 py-2 font-mono text-[11px] shadow-2xl backdrop-blur-xl">
-                            <div className="mb-1.5 text-muted-foreground">{label} CET</div>
-                            <div className="space-y-1">
-                              {payload.map((p) => (
-                                <div key={String(p.dataKey)} className="flex items-center justify-between gap-6">
-                                  <span className="inline-flex items-center gap-2 text-foreground/80">
-                                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: p.color }} />
-                                    {String(p.dataKey)}
-                                  </span>
-                                  <span className="tabular-nums text-foreground">{Number(p.value).toFixed(4)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </Card>
-                        );
-                      }} 
-                      cursor={{ stroke: "rgba(148,163,184,0.2)" }} 
-                    />
-
-                    {top5Names.map((name, i) => (
-                      <Area
-                        key={name}
-                        type="monotone"
-                        dataKey={name}
-                        stroke={["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#ef4444"][i]}
-                        strokeWidth={i === 0 ? 2.25 : 1.75}
-                        fill={["url(#fillMid)", "url(#fillBlue)", "url(#fillBlue)", "url(#fillBlue)", "url(#fillBlue)"][i]}
-                        strokeDasharray={i === 0 ? "0" : i === 1 ? "4 4" : "2 4"}
-                        dot={false}
-                      />
-                    ))}
-                  </AreaChart>
-                </ResponsiveContainer>
+              {!dataSaver && rawHistory.length > 0 && isMounted ? (
+                <RealTimeChart data={chartData} top5Names={top5Names} />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-slate-900/50 rounded-2xl border border-slate-800/50">
                   <WifiOff size={32} className="mb-2 opacity-50" />
@@ -1394,5 +1346,3 @@ export default function RadarEliteFinal() {
   </>
 );
 }
-
-// Deploy-ID: 20260422-1734

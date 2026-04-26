@@ -29,28 +29,25 @@ const scrapers = [
 ];
 
 async function runArmy() {
-  console.log(`🎖️ Revue des troupes : Lancement de l'armée de ${scrapers.length} scrapers...`);
+  console.log(`🎖️ Revue des troupes : Lancement de l'armée de ${scrapers.length} scrapers en mode séquentiel...`);
     
-  const BATCH_SIZE = 5;
-  for (let i = 0; i < scrapers.length; i += BATCH_SIZE) {
-    const batch = scrapers.slice(i, i + BATCH_SIZE);
-    console.log(`\n📦 Lancement du batch ${Math.floor(i/BATCH_SIZE) + 1} : ${batch.join(', ')}`);
+  for (const scraper of scrapers) {
+    console.log(`\n🚀 Lancement de la mission : ${scraper}`);
     
-    const results = await Promise.allSettled(
-      batch.map(s => execPromise(`npx tsx services/scrapers/${s}`, { timeout: 120000 }))
-    );
-    
-    results.forEach((result, idx) => {
-        const name = batch[idx];
-        if (result.status === 'fulfilled') {
-            console.log(`✅ ${name} : Terminé avec succès`);
-        } else {
-            console.error(`❌ ${name} : ÉCHEC - ${result.reason?.message || 'Erreur inconnue'}`);
-        }
-    });
+    try {
+      // Ejecutamos uno por uno y esperamos a que termine antes de seguir
+      // Aumentamos el timeout a 3 minutos por si la máquina va lenta
+      await execPromise(`npx tsx services/scrapers/${scraper}`, { timeout: 180000 });
+      console.log(`✅ ${scraper} : Terminado con éxito`);
+    } catch (error: any) {
+      console.error(`❌ ${scraper} : FALLIDO - ${error.message}`);
+    }
+
+    // Un pequeño respiro de 3 segundos para que la máquina recupere aire
+    await new Promise(resolve => setTimeout(resolve, 3000));
   }
 
-  console.log("\n🏁 Fin de la mission globale. Tous los batches han sido procesados.");
+  console.log("\n🏁 Fin de la mission globale. Todos los robots han patrullado.");
 }
 
-runArmy();
+runArmy();
